@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"appointment_management_system/internal/domain/tenant/entity"
+	"appointment_management_system/internal/domain/tenants/entity"
 	"testing"
 	"time"
 

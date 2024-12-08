@@ -2,9 +2,8 @@ package main
 
 import (
 	"appointment_management_system/internal/config"
-	tenantHandlerRegister "appointment_management_system/internal/domain/tenant/rest/v1/handler/register"
-	"appointment_management_system/internal/domain/tenant/service"
-	tenantRegisterUsecase "appointment_management_system/internal/domain/tenant/usecase"
+	"appointment_management_system/internal/domain/tenants/repository"
+	"appointment_management_system/internal/domain/tenants/rest/v1/register"
 	"appointment_management_system/internal/pkg/middleware"
 	"context"
 	"fmt"
@@ -112,11 +111,8 @@ func setupRoutes(
 }
 
 func setupTenantV1Routes(tenantGroup *gin.RouterGroup, validator *validator.Validate) {
-	createTenantService := service.NewTenantCreateService()
-	registerUsecase := tenantRegisterUsecase.NewTenantRegisterUsecase(createTenantService)
-	registerHandler := tenantHandlerRegister.NewTenantRegisterHandler(validator, registerUsecase)
-
-	tenantGroup.POST("/register", registerHandler.Register)
+	createTenantRepository := repository.NewTenantCreateRepository()
+	register.NewTenantV1RegisterRoutes(tenantGroup, validator, createTenantRepository)
 }
 
 func setupMiddlewares(

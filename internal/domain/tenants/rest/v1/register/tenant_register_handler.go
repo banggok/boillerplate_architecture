@@ -1,8 +1,7 @@
 package register
 
 import (
-	"appointment_management_system/internal/domain/tenant/rest/v1/handler/register/dto"
-	"appointment_management_system/internal/domain/tenant/usecase"
+	"appointment_management_system/internal/domain/tenants/rest/v1/register/dto"
 	"appointment_management_system/internal/pkg/middleware"
 	"net/http"
 
@@ -17,13 +16,13 @@ type TenantRegisterHandler interface {
 
 type tenantRegisterHandler struct {
 	validator       *validator.Validate
-	registerUsecase usecase.TenantRegisterUsecase
+	registerUsecase TenantRegisterUsecase
 }
 
 // NewTenantRegisterHandler creates a new TenantHandler instance with a validator
-func NewTenantRegisterHandler(
+func newTenantRegisterHandler(
 	v *validator.Validate,
-	uc usecase.TenantRegisterUsecase,
+	uc TenantRegisterUsecase,
 ) TenantRegisterHandler {
 	return &tenantRegisterHandler{
 		validator:       v,

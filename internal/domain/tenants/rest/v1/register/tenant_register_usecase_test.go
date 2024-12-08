@@ -1,8 +1,8 @@
-package usecase
+package register
 
 import (
-	"appointment_management_system/internal/domain/tenant/entity"
-	"appointment_management_system/internal/domain/tenant/rest/v1/handler/register/dto"
+	"appointment_management_system/internal/domain/tenants/entity"
+	"appointment_management_system/internal/domain/tenants/rest/v1/register/dto"
 	"errors"
 	"testing"
 
@@ -11,23 +11,23 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockTenantCreateService is a mock implementation of the TenantCreateService interface
-type MockTenantCreateService struct {
+// MockTenantCreateRepository is a mock implementation of the TenantCreateRepository interface
+type MockTenantCreateRepository struct {
 	mock.Mock
 }
 
-func (m *MockTenantCreateService) Execute(ctx *gin.Context, tenant *entity.Tenant) error {
+func (m *MockTenantCreateRepository) Execute(ctx *gin.Context, tenant *entity.Tenant) error {
 	args := m.Called(ctx, tenant)
 	return args.Error(0)
 }
 
 func TestTenantRegisterUsecase_Success(t *testing.T) {
 	// Mock service
-	mockService := new(MockTenantCreateService)
+	mockService := new(MockTenantCreateRepository)
 	mockService.On("Execute", mock.Anything, mock.Anything).Return(nil)
 
 	// Create the usecase with the mock service
-	usecase := NewTenantRegisterUsecase(mockService)
+	usecase := newTenantRegisterUsecase(mockService)
 
 	// Prepare test data
 	request := dto.RegisterTenantRequest{
@@ -61,10 +61,10 @@ func TestTenantRegisterUsecase_Success(t *testing.T) {
 
 func TestTenantRegisterUsecase_Failure_NewTenant(t *testing.T) {
 	// Mock service (not called in this case)
-	mockService := new(MockTenantCreateService)
+	mockService := new(MockTenantCreateRepository)
 
 	// Create the usecase with the mock service
-	usecase := NewTenantRegisterUsecase(mockService)
+	usecase := newTenantRegisterUsecase(mockService)
 
 	// Prepare invalid test data
 	request := dto.RegisterTenantRequest{
@@ -92,11 +92,11 @@ func TestTenantRegisterUsecase_Failure_NewTenant(t *testing.T) {
 
 func TestTenantRegisterUsecase_Failure_CreateService(t *testing.T) {
 	// Mock service
-	mockService := new(MockTenantCreateService)
+	mockService := new(MockTenantCreateRepository)
 	mockService.On("Execute", mock.Anything, mock.Anything).Return(errors.New("service error"))
 
 	// Create the usecase with the mock service
-	usecase := NewTenantRegisterUsecase(mockService)
+	usecase := newTenantRegisterUsecase(mockService)
 
 	// Prepare test data
 	request := dto.RegisterTenantRequest{

@@ -2,8 +2,8 @@ package register
 
 import (
 	"appointment_management_system/internal/config"
-	"appointment_management_system/internal/domain/tenant/entity"
-	"appointment_management_system/internal/domain/tenant/rest/v1/handler/register/dto"
+	"appointment_management_system/internal/domain/tenants/entity"
+	"appointment_management_system/internal/domain/tenants/rest/v1/register/dto"
 	"appointment_management_system/internal/pkg/middleware"
 	"bytes"
 	"encoding/json"
@@ -234,7 +234,7 @@ func testUsecaseError(t *testing.T, validate *validator.Validate) {
 func TestNewTenantRegisterHandler(t *testing.T) {
 	v := validator.New()
 	mockUsecase := new(MockTenantRegisterUsecase)
-	handler := NewTenantRegisterHandler(v, mockUsecase)
+	handler := newTenantRegisterHandler(v, mockUsecase)
 
 	assert.NotNil(t, handler, "Handler should be created successfully")
 }

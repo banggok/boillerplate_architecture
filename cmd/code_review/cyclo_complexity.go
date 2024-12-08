@@ -81,8 +81,8 @@ func cyclomatic_complexity() {
 				complexity := calculateCyclomaticComplexity(fn)
 				if complexity > complexityThreshold {
 					pos := fs.Position(fn.Pos())
-					fmt.Printf("Function %q in %s:%d has high cyclomatic complexity: %d\n",
-						fn.Name.Name, pos.Filename, pos.Line, complexity)
+					fmt.Printf("Function %q in %s:%d has high cyclomatic complexity: %d. Max: %d\n",
+						fn.Name.Name, pos.Filename, pos.Line, complexity, complexityThreshold)
 				}
 				return false
 			})

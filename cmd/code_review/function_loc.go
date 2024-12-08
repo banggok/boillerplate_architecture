@@ -41,7 +41,8 @@ func function_loc() {
 				// Check if the function has more than 50 lines
 				if lines > maxLinesPerFunction {
 					failed = true
-					fmt.Printf("Function %s in %s has %d lines\n", fn.Name.Name, path, lines)
+					fmt.Printf("Function %s in %s has %d lines. Max %d\n",
+						fn.Name.Name, path, lines, maxLinesPerFunction)
 				}
 			}
 		}

@@ -1,9 +1,9 @@
-package usecase
+package register
 
 import (
-	"appointment_management_system/internal/domain/tenant/entity"
-	"appointment_management_system/internal/domain/tenant/rest/v1/handler/register/dto"
-	"appointment_management_system/internal/domain/tenant/service"
+	"appointment_management_system/internal/domain/tenants/entity"
+	"appointment_management_system/internal/domain/tenants/repository"
+	"appointment_management_system/internal/domain/tenants/rest/v1/register/dto"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -15,7 +15,7 @@ type TenantRegisterUsecase interface {
 }
 
 type tenantRegisterUsecase struct {
-	createTenantService service.TenantCreateService
+	createTenantService repository.TenantCreateRepository
 }
 
 // Execute implements TenantRegisterUsecase.
@@ -41,7 +41,7 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request dto.RegisterTe
 	return tenant, nil
 }
 
-func NewTenantRegisterUsecase(createTenantService service.TenantCreateService) TenantRegisterUsecase {
+func newTenantRegisterUsecase(createTenantService repository.TenantCreateRepository) TenantRegisterUsecase {
 	return &tenantRegisterUsecase{
 		createTenantService: createTenantService,
 	}

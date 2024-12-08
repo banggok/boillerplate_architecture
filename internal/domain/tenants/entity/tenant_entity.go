@@ -7,16 +7,16 @@ import (
 )
 
 type Tenant struct {
-	id           uint
-	name         string `validate:"required"`              // Tenant's name (required, no strict restrictions)
-	address      string `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
-	email        string `validate:"required,email"`        // Tenant's contact email (required)
-	phone        string `validate:"omitempty,e164"`        // Tenant's phone number (optional)
-	timezone     string `validate:"required,iana_tz"`      // Tenant's timezone (required, IANA format)
-	openingHours string `validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
-	closingHours string `validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
-	createdAt    time.Time
-	updatedAt    time.Time
+	id           uint      // id from database
+	name         string    `validate:"required"`              // Tenant's name (required, no strict restrictions)
+	address      string    `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
+	email        string    `validate:"required,email"`        // Tenant's contact email (required)
+	phone        string    `validate:"omitempty,e164"`        // Tenant's phone number (optional)
+	timezone     string    `validate:"required,iana_tz"`      // Tenant's timezone (required, IANA format)
+	openingHours string    `validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
+	closingHours string    `validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
+	createdAt    time.Time // timestamp from database
+	updatedAt    time.Time // timestamp from database
 }
 
 type NewTenantParams struct {

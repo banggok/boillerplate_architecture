@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"appointment_management_system/internal/pkg/constants"
 	"net/http"
 	"strings"
 
@@ -18,7 +19,7 @@ func TransactionMiddleware(master, slave *gorm.DB) gin.HandlerFunc {
 
 		defer rollbackOnPanic(tx, c)
 
-		c.Set("db_tx", tx)
+		c.Set(constants.DBTRANSACTION, tx)
 		c.Next()
 
 		finalizeTransaction(tx, isWrite, c)

@@ -36,7 +36,7 @@ func file_loc() {
 		// Print the file if it exceeds the line threshold
 		if lines > maxLinesPerFile {
 			failed = true
-			fmt.Printf("File: %s has %d lines\n", path, lines)
+			fmt.Printf("File: %s has %d lines. Max %d\n", path, lines, maxLinesPerFile)
 		}
 
 		return nil
