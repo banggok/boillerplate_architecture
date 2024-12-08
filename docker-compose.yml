@@ -1,0 +1,26 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: local-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: appointment_management
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      TZ: UTC # Set timezone to UTC
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - shared_services
+
+networks:
+  shared_services:
+    external: true
