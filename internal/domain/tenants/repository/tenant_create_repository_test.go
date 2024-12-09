@@ -2,7 +2,9 @@ package repository
 
 import (
 	"appointment_management_system/internal/domain/tenants/entity"
+	"context"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -71,7 +73,13 @@ type testCase struct {
 	expectedError string
 }
 
-func runTestCase(t *testing.T, repo *tenantCreateRepository, ctx *gin.Context, tenant *entity.Tenant, mockPhoneRepo *mockTenantIsPhoneExistsRepository, mockEmailRepo *mockTenantIsEmailExistsRepository, tc testCase) {
+func runTestCase(t *testing.T, repo TenantCreateRepository, ctx *gin.Context, tenant *entity.Tenant, mockPhoneRepo *mockTenantIsPhoneExistsRepository, mockEmailRepo *mockTenantIsEmailExistsRepository, tc testCase) {
+	helperGetDBOri := helperGetDB
+	defer func() {
+		helperGetDB = helperGetDBOri
+
+	}()
+
 	// Setup mocks
 	mockRepositories(mockPhoneRepo, mockEmailRepo, tc.phoneExists, tc.emailExists, ctx, tenant)
 
@@ -151,10 +159,10 @@ func TestTenantCreateRepository_Execute(t *testing.T) {
 	mockPhoneRepo := new(mockTenantIsPhoneExistsRepository)
 	mockEmailRepo := new(mockTenantIsEmailExistsRepository)
 
-	repo := &tenantCreateRepository{
-		isPhoneExists: mockPhoneRepo,
-		isEmailExists: mockEmailRepo,
-	}
+	repo := NewTenantCreateRepository()
+
+	repo.(*tenantCreateRepository).isEmailExists = mockEmailRepo
+	repo.(*tenantCreateRepository).isPhoneExists = mockPhoneRepo
 
 	tenant := makeTenant()
 
@@ -169,4 +177,89 @@ func TestTenantCreateRepository_Execute(t *testing.T) {
 			runTestCase(t, repo, ctx, tenant, mockPhoneRepo, mockEmailRepo, tc)
 		})
 	}
+}
+
+func TestCheckPhoneExistence_ErrorCases(t *testing.T) {
+	mockPhoneRepo := new(mockTenantIsPhoneExistsRepository)
+
+	repo := &tenantCreateRepository{
+		isPhoneExists: mockPhoneRepo,
+	}
+
+	tenant := &entity.Tenant{}
+	var phoneExists bool
+
+	t.Run("context missing gin.Context key", func(t *testing.T) {
+		ctx := context.Background() // No gin.Context key
+
+		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
+	})
+
+	t.Run("context has invalid gin.Context value", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), ginContextKey, "invalid_value") // Wrong type
+
+		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
+	})
+
+	t.Run("phone existence check fails", func(t *testing.T) {
+		ginCtx, _ := gin.CreateTestContext(nil)
+		ctx := context.WithValue(context.Background(), ginContextKey, ginCtx)
+
+		mockPhoneRepo.On("Execute", ginCtx, "").Return((*bool)(nil), fmt.Errorf("phone check error"))
+
+		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "phone check error")
+		mockPhoneRepo.AssertExpectations(t)
+	})
+}
+
+func TestCheckEmailExistence_ErrorCases(t *testing.T) {
+	mockEmailRepo := new(mockTenantIsEmailExistsRepository)
+
+	repo := &tenantCreateRepository{
+		isEmailExists: mockEmailRepo,
+	}
+
+	tenant := &entity.Tenant{}
+	var emailExists bool
+
+	t.Run("context missing gin.Context key", func(t *testing.T) {
+		ctx := context.Background() // No gin.Context key
+
+		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
+	})
+
+	t.Run("context has invalid gin.Context value", func(t *testing.T) {
+		ctx := context.WithValue(context.Background(), ginContextKey, "invalid_value") // Wrong type
+
+		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
+	})
+
+	t.Run("email existence check fails", func(t *testing.T) {
+		ginCtx, _ := gin.CreateTestContext(nil)
+		ctx := context.WithValue(context.Background(), ginContextKey, ginCtx)
+
+		// Correctly return (*bool)(nil) instead of nil
+		mockEmailRepo.On("Execute", ginCtx, "").Return((*bool)(nil), fmt.Errorf("email check error"))
+
+		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
+
+		assert.Error(t, err)
+		assert.EqualError(t, err, "email check error")
+		mockEmailRepo.AssertExpectations(t)
+	})
 }

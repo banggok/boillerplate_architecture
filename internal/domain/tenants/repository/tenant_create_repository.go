@@ -2,19 +2,12 @@ package repository
 
 import (
 	"appointment_management_system/internal/domain/tenants/entity"
-	"appointment_management_system/internal/pkg/helper"
 	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )
-
-var helperGetDB = helper.GetDB
-
-type contextKey string
-
-const ginContextKey contextKey = "ginContext"
 
 type TenantCreateRepository interface {
 	Execute(*gin.Context, *entity.Tenant) error

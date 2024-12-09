@@ -6,16 +6,16 @@ import (
 )
 
 type tenantModel struct {
-	ID           uint      `gorm:"primaryKey;autoIncrement"`          // Primary key, auto-incrementing
-	Name         string    `gorm:"type:varchar(255);not null"`        // Tenant's name, cannot be null
-	Address      string    `gorm:"type:varchar(255)"`                 // Optional, maximum 255 characters
-	Email        string    `gorm:"type:varchar(255);not null;unique"` // Unique and required email
-	Phone        string    `gorm:"type:varchar(20);unique"`           // Optional phone number, unique constraint
-	Timezone     string    `gorm:"type:varchar(100);not null"`        // Required timezone
-	OpeningHours string    `gorm:"type:time"`                         // Optional opening hours
-	ClosingHours string    `gorm:"type:time"`                         // Optional closing hours
-	CreatedAt    time.Time `gorm:"autoCreateTime"`                    // Automatically set when the record is created
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`                    // Automatically set when the record is updated
+	ID           uint      `gorm:"primaryKey;autoIncrement"`                // Primary key, auto-incrementing
+	Name         string    `gorm:"type:varchar(255);not null"`              // Tenant's name, cannot be null
+	Address      string    `gorm:"type:varchar(255)"`                       // Optional, maximum 255 characters
+	Email        string    `gorm:"type:varchar(255);not null;unique;index"` // Unique and indexed email
+	Phone        string    `gorm:"type:varchar(20);not null;unique;index"`  // unique and indexed
+	Timezone     string    `gorm:"type:varchar(100);not null"`              // Required timezone
+	OpeningHours string    `gorm:"type:time"`                               // Optional opening hours
+	ClosingHours string    `gorm:"type:time"`                               // Optional closing hours
+	CreatedAt    time.Time `gorm:"autoCreateTime"`                          // Automatically set when the record is created
+	UpdatedAt    time.Time `gorm:"autoUpdateTime"`                          // Automatically set when the record is updated
 }
 
 func (tenantModel) TableName() string {
