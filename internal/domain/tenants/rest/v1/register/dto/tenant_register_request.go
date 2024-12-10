@@ -6,23 +6,23 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-// RegisterTenantRequest represents the payload for tenant registration.
+// RegisterTenantRequest represents the payload for tenant registration
+// @description Tenant registration request body
 type RegisterTenantRequest struct {
-	Name         string  `json:"name" validate:"required"`                       // Tenant's name (required, no strict restrictions)
-	Address      string  `json:"address" validate:"omitempty,max=255"`           // Optional, with a maximum of 255 characters
-	Email        string  `json:"email" validate:"required,email"`                // Tenant's contact email (required)
-	Phone        string  `json:"phone" validate:"omitempty,e164"`                // Tenant's phone number (optional)
-	Timezone     string  `json:"timezone" validate:"required,iana_tz"`           // Tenant's timezone (required, IANA format)
-	OpeningHours string  `json:"opening_hours" validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
-	ClosingHours string  `json:"closing_hours" validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
-	Account      Account `json:"account" validate:"required"`                    // Admin user details (required)
+	Name         string  `json:"name" validate:"required" example:"Example Tenant"`               // Tenant's name
+	Address      string  `json:"address" validate:"omitempty,max=255" example:"123 Main Street"`  // Tenant's address
+	Email        string  `json:"email" validate:"required,email" example:"tenant@example.com"`    // Tenant's email
+	Phone        string  `json:"phone" validate:"omitempty,e164" example:"+1987654321"`           // Tenant's phone
+	Timezone     string  `json:"timezone" validate:"required,iana_tz" example:"America/New_York"` // Tenant's timezone
+	OpeningHours string  `json:"opening_hours" validate:"omitempty,time_format" example:"09:00"`  // Opening hours
+	ClosingHours string  `json:"closing_hours" validate:"omitempty,time_format" example:"18:00"`  // Closing hours
+	Account      Account `json:"account" validate:"required"`                                     // Admin user details
 }
 
-// Account represents the admin user's information.
 type Account struct {
-	Name  string `json:"name" validate:"required,alpha_space"` // Admin user's name (required, only letters and spaces allowed)
-	Email string `json:"email" validate:"required,email"`      // Admin user's email (required)
-	Phone string `json:"phone" validate:"omitempty,e164"`      // Admin user's phone number (optional)
+	Name  string `json:"name" validate:"required,alpha_space" example:"John Doe"`     // Admin's name
+	Email string `json:"email" validate:"required,email" example:"admin@example.com"` // Admin's email
+	Phone string `json:"phone" validate:"omitempty,e164" example:"+1234567890"`       // Admin's phone
 }
 
 // CustomValidationMessages maps validation errors to user-friendly messages.

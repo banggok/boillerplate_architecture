@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/gin-contrib/requestid"
@@ -8,7 +9,9 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func CustomLogger(logger *logrus.Logger) gin.HandlerFunc {
+var logger = logrus.StandardLogger()
+
+func CustomLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Capture the start time
 		startTime := time.Now()
@@ -31,7 +34,7 @@ func CustomLogger(logger *logrus.Logger) gin.HandlerFunc {
 		logger.WithFields(logrus.Fields{
 			"request_id":  reqID,
 			"status_code": statusCode,
-			"latency":     latency,
+			"latency":     fmt.Sprintf("%dms", latency.Milliseconds()),
 			"client_ip":   clientIP,
 			"method":      method,
 			"path":        path,

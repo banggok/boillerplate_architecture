@@ -1,0 +1,193 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Appointment Management System API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/v1/tenants/register": {
+            "post": {
+                "description": "Register a new tenant in the system",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Register Tenant",
+                "parameters": [
+                    {
+                        "description": "Tenant registration request body",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterTenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.RegisterTenantResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.CustomError"
+                        }
+                    },
+                    "422": {
+                        "description": "Failed to register tenant",
+                        "schema": {
+                            "$ref": "#/definitions/middleware.CustomError"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.Account": {
+            "type": "object",
+            "required": [
+                "email",
+                "name"
+            ],
+            "properties": {
+                "email": {
+                    "description": "Admin's email",
+                    "type": "string",
+                    "example": "admin@example.com"
+                },
+                "name": {
+                    "description": "Admin's name",
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "phone": {
+                    "description": "Admin's phone",
+                    "type": "string",
+                    "example": "+1234567890"
+                }
+            }
+        },
+        "dto.RegisterTenantRequest": {
+            "description": "Tenant registration request body",
+            "type": "object",
+            "required": [
+                "account",
+                "email",
+                "name",
+                "timezone"
+            ],
+            "properties": {
+                "account": {
+                    "description": "Admin user details",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/dto.Account"
+                        }
+                    ]
+                },
+                "address": {
+                    "description": "Tenant's address",
+                    "type": "string",
+                    "maxLength": 255,
+                    "example": "123 Main Street"
+                },
+                "closing_hours": {
+                    "description": "Closing hours",
+                    "type": "string",
+                    "example": "18:00"
+                },
+                "email": {
+                    "description": "Tenant's email",
+                    "type": "string",
+                    "example": "tenant@example.com"
+                },
+                "name": {
+                    "description": "Tenant's name",
+                    "type": "string",
+                    "example": "Example Tenant"
+                },
+                "opening_hours": {
+                    "description": "Opening hours",
+                    "type": "string",
+                    "example": "09:00"
+                },
+                "phone": {
+                    "description": "Tenant's phone",
+                    "type": "string",
+                    "example": "+1987654321"
+                },
+                "timezone": {
+                    "description": "Tenant's timezone",
+                    "type": "string",
+                    "example": "America/New_York"
+                }
+            }
+        },
+        "dto.RegisterTenantResponse": {
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string"
+                },
+                "closing_hours": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "opening_hours": {
+                    "type": "string"
+                },
+                "phone": {
+                    "type": "string"
+                },
+                "timezone": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "middleware.CustomError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "description": "Custom error code",
+                    "type": "string"
+                },
+                "details": {
+                    "description": "Additional details",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "description": "Human-readable message",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

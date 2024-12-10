@@ -1,3 +1,6 @@
+// @title Appointment Management System API
+// @version 1.0
+
 package main
 
 import (
@@ -6,6 +9,7 @@ import (
 	"appointment_management_system/internal/domain/tenants/rest/v1/register"
 	"appointment_management_system/internal/pkg/middleware"
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"os"
@@ -24,159 +28,202 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-// AppConfig contains the application configuration
-var AppConfig = struct {
-	DefaultPort      string
+type AppConfig struct {
+	Port             string
 	CORSAllowOrigins string
 	RateLimit        int
-	GracefulShutdown int
-}{
-	DefaultPort:      getConfigValue("PORT", "8080"),
-	CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "https://example.com"),
-	RateLimit:        getConfigValueAsInt("RATE_LIMIT", 10),
-	GracefulShutdown: getConfigValueAsInt("SHUTDOWN_TIMEOUT", 5),
+	GracefulShutdown time.Duration
+	DBConfig         DBConfig
+}
+
+type DBConfig struct {
+	MasterDSN string
+	SlaveDSN  string
 }
 
 type DBConnection struct {
-	master *gorm.DB
-	slave  *gorm.DB
+	Master *gorm.DB
+	Slave  *gorm.DB
 }
 
-var conn DBConnection
-
 func main() {
-	logger := log.New()
-	// Setup application configurations and dependencies
-	validator, rateLimiter := setupConfiguration()
+	config.SetupLogging()
+	config.SetTimezone()
+	appConfig := loadAppConfig()
+	validator := config.SetupValidator()
+	rateLimiter := setupRateLimiter(appConfig.RateLimit)
 
-	// Initialize Gin router
-	router := gin.Default()
-
-	// Connect to the database
-	var err error
-	conn, err := connectMySQL()
+	dbConn, err := connectDatabase(appConfig.DBConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
+	defer cleanupDatabase(dbConn)
 
-	// Set up routes and middlewares
-	setupRoutes(router, validator, rateLimiter, conn, logger)
-
-	// Create a server runner
-	serverRunner := NewHTTPServerRunner(router, AppConfig.DefaultPort)
-
-	// Start the server with graceful shutdown
-	signalCh := make(chan os.Signal, 1)
-	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
-	runServer(serverRunner, time.Duration(AppConfig.GracefulShutdown)*time.Second, signalCh)
+	router := setupRouter(dbConn, validator, rateLimiter)
+	runServer(router, appConfig)
 }
 
-func setupConfiguration() (*validator.Validate, *limiter.Limiter) {
-	config.SetupLogging()
-	config.SetTimezone()
-
-	// Setup validator
-	validator := config.SetupValidator()
-
-	// Setup rate limiter
-	rate := limiter.Rate{
-		Period: time.Minute,
-		Limit:  int64(AppConfig.RateLimit),
+func loadAppConfig() AppConfig {
+	return AppConfig{
+		Port:             getConfigValue("PORT", "8080"),
+		CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "https://example.com"),
+		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 10),
+		GracefulShutdown: time.Duration(getConfigValueAsInt("SHUTDOWN_TIMEOUT", 5)) * time.Second,
+		DBConfig: DBConfig{
+			MasterDSN: getDSN("MASTER"),
+			SlaveDSN:  getDSN("SLAVE"),
+		},
 	}
-	store := memory.NewStore()
-	rateLimiter := limiter.New(store, rate)
-
-	return validator, rateLimiter
 }
 
-func setupRoutes(
-	router *gin.Engine,
+func getDSN(role string) string {
+	host := getConfigValue(fmt.Sprintf("DB_%s_HOST", role), "localhost")
+	port := getConfigValue(fmt.Sprintf("DB_%s_PORT", role), "3306")
+	user := getConfigValue(fmt.Sprintf("DB_%s_USER", role), "user")
+	password := getConfigValue(fmt.Sprintf("DB_%s_PASSWORD", role), "password")
+	dbName := getConfigValue(fmt.Sprintf("DB_%s_NAME", role), "appointment_management")
+	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, dbName)
+}
+func connectDatabase(cfg DBConfig) (*DBConnection, error) {
+	// Connect to the master database
+	dbLogger := logger.New(
+		log.New(),
+		logger.Config{
+			SlowThreshold:             time.Second,
+			LogLevel:                  logger.Info,
+			IgnoreRecordNotFoundError: true,
+			Colorful:                  true,
+		},
+	)
+	master, err := gorm.Open(mysql.Open(cfg.MasterDSN), &gorm.Config{
+		Logger: dbLogger,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to master database: %w", err)
+	}
+
+	// Configure the master connection pool
+	sqlDB, err := master.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get master database connection pool: %w", err)
+	}
+	configureConnectionPool(sqlDB, "master")
+
+	// Connect to the slave database
+	slave, err := gorm.Open(mysql.Open(cfg.SlaveDSN), &gorm.Config{
+		Logger: dbLogger,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to slave database: %w", err)
+	}
+
+	// Configure the slave connection pool
+	sqlDB, err = slave.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get slave database connection pool: %w", err)
+	}
+	configureConnectionPool(sqlDB, "slave")
+
+	return &DBConnection{Master: master, Slave: slave}, nil
+}
+
+func configureConnectionPool(sqlDB *sql.DB, label string) {
+	sqlDB.SetMaxOpenConns(50)                  // Maximum number of open connections to the database
+	sqlDB.SetMaxIdleConns(25)                  // Maximum number of idle connections in the pool
+	sqlDB.SetConnMaxLifetime(30 * time.Minute) // Maximum amount of time a connection may be reused
+
+	log.Infof("Database connection pool configured for %s", label)
+}
+
+func cleanupDatabase(conn *DBConnection) {
+	closeConnection := func(db *gorm.DB, label string) {
+		if db == nil {
+			return
+		}
+		sqlDB, err := db.DB()
+		if err == nil {
+			if err := sqlDB.Close(); err != nil {
+				log.Errorf("Failed to close %s database: %v", label, err)
+			} else {
+				log.Infof("%s database closed successfully", label)
+			}
+		} else {
+			log.Errorf("Error retrieving %s database connection: %v", label, err)
+		}
+	}
+	closeConnection(conn.Master, "master")
+	closeConnection(conn.Slave, "slave")
+}
+
+func setupRouter(
+	db *DBConnection,
 	validator *validator.Validate,
 	rateLimiter *limiter.Limiter,
-	db DBConnection,
-	logger *log.Logger,
-) {
-	setupMiddlewares(router, rateLimiter, db, logger)
+) *gin.Engine {
+	router := gin.Default()
 
+	// Middleware
+	router.Use(requestid.New())
+	router.Use(cors.New(cors.Config{
+		AllowOrigins: []string{getConfigValue("CORS_ALLOW_ORIGINS", "*")},
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
+	}))
+	router.Use(middleware.CustomRecoveryMiddleware())
+	router.Use(middleware.CustomLogger())
+	router.Use(ginmiddleware.NewMiddleware(rateLimiter))
+	router.Use(middleware.TransactionMiddleware(db.Master, db.Slave))
+	router.Use(middleware.ErrorHandlingMiddleware())
+
+	// Health route
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
 
+	// API Routes
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
+	setupTenantRoutes(v1, validator)
 
-	setupTenantV1Routes(v1.Group("/tenants"), validator)
+	return router
 }
 
-func setupTenantV1Routes(tenantGroup *gin.RouterGroup, validator *validator.Validate) {
-	createTenantRepository := repository.NewTenantCreateRepository()
-	register.NewTenantV1RegisterRoutes(tenantGroup, validator, createTenantRepository)
+func setupTenantRoutes(v1 *gin.RouterGroup, validator *validator.Validate) {
+	tenantGroup := v1.Group("/tenants")
+	createTenantRepo := repository.NewTenantCreateRepository()
+	register.NewTenantV1RegisterRoutes(tenantGroup, validator, createTenantRepo)
 }
 
-func setupMiddlewares(
-	router *gin.Engine,
-	rateLimiter *limiter.Limiter,
-	db DBConnection,
-	logger *log.Logger,
-) {
-	router.Use(requestid.New())
-	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{AppConfig.CORSAllowOrigins},
-		AllowMethods: []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
-	}))
-	router.Use(middleware.CustomRecoveryMiddleware())
-	router.Use(middleware.ErrorHandlingMiddleware())
-	router.Use(middleware.CustomLogger(logger))
-	router.Use(ginmiddleware.NewMiddleware(rateLimiter))
-
-	router.Use(middleware.TransactionMiddleware(db.master, db.slave))
-}
-
-var gormOpen = gorm.Open
-
-func connectMySQL() (DBConnection, error) {
-	conn := DBConnection{}
-
-	host := getConfigValue("DB_MASTER_HOST", "localhost")
-	port := getConfigValue("DB_MASTER_PORT", "3306")
-	user := getConfigValue("DB_MASTER_USER", "user")
-	password := getConfigValue("DB_MASTER_PASSWORD", "password")
-	dbName := getConfigValue("DB_MASTER_NAME", "appointment_management")
-
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		user, password, host, port, dbName)
-
-	master, err := gormOpen(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return DBConnection{}, fmt.Errorf("failed to connect to Master MySQL: %w", err)
+func runServer(router *gin.Engine, cfg AppConfig) {
+	server := &http.Server{
+		Addr:    fmt.Sprintf(":%s", cfg.Port),
+		Handler: router,
 	}
 
-	log.Infof("Connected to Master MySQL database at %s:%s", host, port)
+	// Signal handling
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
-	conn.master = master
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server error: %v", err)
+		}
+	}()
 
-	host = getConfigValue("DB_MASTER_HOST", "localhost")
-	port = getConfigValue("DB_MASTER_PORT", "3306")
-	user = getConfigValue("DB_MASTER_USER", "user")
-	password = getConfigValue("DB_MASTER_PASSWORD", "password")
-	dbName = getConfigValue("DB_MASTER_NAME", "appointment_management")
+	<-signalCh
+	log.Info("Signal received, shutting down server...")
 
-	dsn = fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
-		user, password, host, port, dbName)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdown)
+	defer cancel()
 
-	slave, err := gormOpen(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		return DBConnection{}, fmt.Errorf("failed to connect to Slave MySQL: %w", err)
+	if err := server.Shutdown(ctx); err != nil {
+		log.Errorf("Server shutdown error: %v", err)
+	} else {
+		log.Info("Server shut down gracefully")
 	}
-
-	log.Infof("Connected to Slave MySQL database at %s:%s", host, port)
-
-	conn.slave = slave
-
-	return conn, nil
 }
 
 func getConfigValue(key, fallback string) string {
@@ -195,71 +242,17 @@ func getConfigValueAsInt(key string, fallback int) int {
 
 	intValue, err := strconv.Atoi(value)
 	if err != nil {
-		log.Warnf("Invalid value for %s. Using fallback: %d", key, fallback)
+		log.Warnf("Invalid value for %s, using fallback: %d", key, fallback)
 		return fallback
 	}
 	return intValue
 }
 
-func runServer(runner ServerRunner, shutdownTimeout time.Duration, signals chan os.Signal) {
-	serverError := make(chan error, 1)
-
-	go func() {
-		log.Infof("Server running on %s", getServerAddress(runner))
-		serverError <- runner.Run()
-	}()
-
-	select {
-	case <-signals:
-		log.Info("Signal received, initiating graceful shutdown...")
-		gracefulShutdown(runner, shutdownTimeout)
-	case err := <-serverError:
-		if err != nil && err != http.ErrServerClosed {
-			log.Errorf("Server error: %v", err)
-		}
+func setupRateLimiter(rateLimit int) *limiter.Limiter {
+	rate := limiter.Rate{
+		Period: time.Minute,
+		Limit:  int64(rateLimit),
 	}
-}
-
-func gracefulShutdown(runner ServerRunner, shutdownTimeout time.Duration) {
-	log.Info("Shutting down server...")
-	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-	defer cancel()
-
-	if err := runner.Shutdown(ctx); err != nil {
-		log.Panicf("Failed to gracefully shutdown: %v", err)
-	}
-
-	if conn.master != nil {
-		sqlDB, err := conn.master.DB()
-		if err == nil {
-			if closeErr := sqlDB.Close(); closeErr != nil {
-				log.Errorf("Error closing database connection: %v", closeErr)
-			} else {
-				log.Info("Database connection closed successfully")
-			}
-		} else {
-			log.Errorf("Error retrieving database connection: %v", err)
-		}
-	}
-
-	if conn.slave != nil {
-		sqlDB, err := conn.slave.DB()
-		if err == nil {
-			if closeErr := sqlDB.Close(); closeErr != nil {
-				log.Errorf("Error closing database connection: %v", closeErr)
-			} else {
-				log.Info("Database connection closed successfully")
-			}
-		} else {
-			log.Errorf("Error retrieving database connection: %v", err)
-		}
-	}
-	log.Info("Server exited gracefully")
-}
-
-func getServerAddress(runner ServerRunner) string {
-	if r, ok := runner.(*HTTPServerRunner); ok {
-		return r.server.Addr
-	}
-	return "unknown address"
+	store := memory.NewStore()
+	return limiter.New(store, rate)
 }

@@ -2,11 +2,9 @@ package repository
 
 import (
 	"appointment_management_system/internal/domain/tenants/entity"
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
-	"golang.org/x/sync/errgroup"
 )
 
 type TenantCreateRepository interface {
@@ -42,38 +40,21 @@ func (t *tenantCreateRepository) Execute(ctx *gin.Context, tenant *entity.Tenant
 // Helper to validate tenant existence
 func (t *tenantCreateRepository) validateTenantExistence(ctx *gin.Context, tenant *entity.Tenant) (bool, bool, error) {
 	var phoneExists, emailExists bool
-	groupCtx := context.WithValue(
-		ctx.Request.Context(),
-		ginContextKey,
-		ctx)
 
-	g, groupCtx := errgroup.WithContext(groupCtx)
-
-	// Check phone existence
-	g.Go(func() error {
-		return t.checkPhoneExistence(groupCtx, tenant, &phoneExists)
-	})
-
-	// Check email existence
-	g.Go(func() error {
-		return t.checkEmailExistence(groupCtx, tenant, &emailExists)
-	})
-
-	// Wait for goroutines to complete
-	if err := g.Wait(); err != nil {
-		return false, false, err
+	if err := t.checkPhoneExistence(ctx, tenant, &phoneExists); err != nil {
+		return phoneExists, emailExists, err
+	}
+	if err := t.checkEmailExistence(ctx, tenant, &emailExists); err != nil {
+		return phoneExists, emailExists, err
 	}
 
 	return phoneExists, emailExists, nil
 }
 
 // Helper to check phone existence
-func (t *tenantCreateRepository) checkPhoneExistence(ctx context.Context, tenant *entity.Tenant, phoneExists *bool) error {
-	ginCtx, ok := ctx.Value(ginContextKey).(*gin.Context)
-	if !ok {
-		return fmt.Errorf("failed to retrieve *gin.Context from context")
-	}
-	res, err := t.isPhoneExists.Execute(ginCtx, tenant.GetPhone())
+func (t *tenantCreateRepository) checkPhoneExistence(ctx *gin.Context, tenant *entity.Tenant, phoneExists *bool) error {
+
+	res, err := t.isPhoneExists.Execute(ctx, tenant.GetPhone())
 	if err != nil {
 		return err
 	}
@@ -82,12 +63,8 @@ func (t *tenantCreateRepository) checkPhoneExistence(ctx context.Context, tenant
 }
 
 // Helper to check email existence
-func (t *tenantCreateRepository) checkEmailExistence(ctx context.Context, tenant *entity.Tenant, emailExists *bool) error {
-	ginCtx, ok := ctx.Value(ginContextKey).(*gin.Context)
-	if !ok {
-		return fmt.Errorf("failed to retrieve *gin.Context from context")
-	}
-	res, err := t.isEmailExists.Execute(ginCtx, tenant.GetEmail())
+func (t *tenantCreateRepository) checkEmailExistence(ctx *gin.Context, tenant *entity.Tenant, emailExists *bool) error {
+	res, err := t.isEmailExists.Execute(ctx, tenant.GetEmail())
 	if err != nil {
 		return err
 	}

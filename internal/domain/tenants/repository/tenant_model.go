@@ -19,7 +19,7 @@ type tenantModel struct {
 }
 
 func (tenantModel) TableName() string {
-	return "tenant"
+	return "tenants"
 }
 
 func newTenantModel(entity entity.Tenant) tenantModel {

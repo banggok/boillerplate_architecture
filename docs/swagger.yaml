@@ -1,0 +1,134 @@
+definitions:
+  dto.Account:
+    properties:
+      email:
+        description: Admin's email
+        example: admin@example.com
+        type: string
+      name:
+        description: Admin's name
+        example: John Doe
+        type: string
+      phone:
+        description: Admin's phone
+        example: "+1234567890"
+        type: string
+    required:
+    - email
+    - name
+    type: object
+  dto.RegisterTenantRequest:
+    description: Tenant registration request body
+    properties:
+      account:
+        allOf:
+        - $ref: '#/definitions/dto.Account'
+        description: Admin user details
+      address:
+        description: Tenant's address
+        example: 123 Main Street
+        maxLength: 255
+        type: string
+      closing_hours:
+        description: Closing hours
+        example: "18:00"
+        type: string
+      email:
+        description: Tenant's email
+        example: tenant@example.com
+        type: string
+      name:
+        description: Tenant's name
+        example: Example Tenant
+        type: string
+      opening_hours:
+        description: Opening hours
+        example: "09:00"
+        type: string
+      phone:
+        description: Tenant's phone
+        example: "+1987654321"
+        type: string
+      timezone:
+        description: Tenant's timezone
+        example: America/New_York
+        type: string
+    required:
+    - account
+    - email
+    - name
+    - timezone
+    type: object
+  dto.RegisterTenantResponse:
+    properties:
+      address:
+        type: string
+      closing_hours:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      opening_hours:
+        type: string
+      phone:
+        type: string
+      timezone:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  middleware.CustomError:
+    properties:
+      code:
+        description: Custom error code
+        type: string
+      details:
+        additionalProperties:
+          type: string
+        description: Additional details
+        type: object
+      message:
+        description: Human-readable message
+        type: string
+    type: object
+info:
+  contact: {}
+  title: Appointment Management System API
+  version: "1.0"
+paths:
+  /api/v1/tenants/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new tenant in the system
+      parameters:
+      - description: Tenant registration request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.RegisterTenantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.RegisterTenantResponse'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/middleware.CustomError'
+        "422":
+          description: Failed to register tenant
+          schema:
+            $ref: '#/definitions/middleware.CustomError'
+      summary: Register Tenant
+      tags:
+      - Tenants
+swagger: "2.0"

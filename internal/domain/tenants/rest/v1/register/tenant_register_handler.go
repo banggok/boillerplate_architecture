@@ -31,6 +31,16 @@ func newTenantRegisterHandler(
 }
 
 // Register handles tenant registration
+// @Summary Register Tenant
+// @Description Register a new tenant in the system
+// @Tags Tenants
+// @Accept json
+// @Produce json
+// @Param body body dto.RegisterTenantRequest true "Tenant registration request body"
+// @Success 201 {object} dto.RegisterTenantResponse
+// @Failure 400 {object} middleware.CustomError "Invalid request payload"
+// @Failure 422 {object} middleware.CustomError "Failed to register tenant"
+// @Router /api/v1/tenants/register [post]
 func (h *tenantRegisterHandler) Register(c *gin.Context) {
 	var request dto.RegisterTenantRequest
 

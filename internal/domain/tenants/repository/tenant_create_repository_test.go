@@ -2,7 +2,6 @@ package repository
 
 import (
 	"appointment_management_system/internal/domain/tenants/entity"
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -189,31 +188,12 @@ func TestCheckPhoneExistence_ErrorCases(t *testing.T) {
 	tenant := &entity.Tenant{}
 	var phoneExists bool
 
-	t.Run("context missing gin.Context key", func(t *testing.T) {
-		ctx := context.Background() // No gin.Context key
-
-		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
-	})
-
-	t.Run("context has invalid gin.Context value", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), ginContextKey, "invalid_value") // Wrong type
-
-		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
-	})
-
 	t.Run("phone existence check fails", func(t *testing.T) {
 		ginCtx, _ := gin.CreateTestContext(nil)
-		ctx := context.WithValue(context.Background(), ginContextKey, ginCtx)
 
 		mockPhoneRepo.On("Execute", ginCtx, "").Return((*bool)(nil), fmt.Errorf("phone check error"))
 
-		err := repo.checkPhoneExistence(ctx, tenant, &phoneExists)
+		err := repo.checkPhoneExistence(ginCtx, tenant, &phoneExists)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "phone check error")
@@ -231,35 +211,57 @@ func TestCheckEmailExistence_ErrorCases(t *testing.T) {
 	tenant := &entity.Tenant{}
 	var emailExists bool
 
-	t.Run("context missing gin.Context key", func(t *testing.T) {
-		ctx := context.Background() // No gin.Context key
-
-		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
-	})
-
-	t.Run("context has invalid gin.Context value", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), ginContextKey, "invalid_value") // Wrong type
-
-		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
-
-		assert.Error(t, err)
-		assert.EqualError(t, err, "failed to retrieve *gin.Context from context")
-	})
-
 	t.Run("email existence check fails", func(t *testing.T) {
 		ginCtx, _ := gin.CreateTestContext(nil)
-		ctx := context.WithValue(context.Background(), ginContextKey, ginCtx)
 
 		// Correctly return (*bool)(nil) instead of nil
 		mockEmailRepo.On("Execute", ginCtx, "").Return((*bool)(nil), fmt.Errorf("email check error"))
 
-		err := repo.checkEmailExistence(ctx, tenant, &emailExists)
+		err := repo.checkEmailExistence(ginCtx, tenant, &emailExists)
 
 		assert.Error(t, err)
 		assert.EqualError(t, err, "email check error")
 		mockEmailRepo.AssertExpectations(t)
 	})
+}
+
+// Unit test for validateTenantExistence with errors in checkPhoneExistence and checkEmailExistence
+func TestValidateTenantExistence_ErrorCases(t *testing.T) {
+	mockPhoneRepo := new(mockTenantIsPhoneExistsRepository)
+	mockEmailRepo := new(mockTenantIsEmailExistsRepository)
+
+	repo := &tenantCreateRepository{
+		isPhoneExists: mockPhoneRepo,
+		isEmailExists: mockEmailRepo,
+	}
+
+	tenant := &entity.Tenant{}
+	ginCtx, _ := gin.CreateTestContext(nil)
+
+	runTest := func(t *testing.T, name string, mockSetup func(), expectedError string) {
+		t.Run(name, func(t *testing.T) {
+			if mockSetup != nil {
+				mockSetup()
+			}
+
+			phoneExists, emailExists, err := repo.validateTenantExistence(ginCtx, tenant)
+
+			assert.Error(t, err)
+			assert.EqualError(t, err, expectedError)
+			assert.False(t, phoneExists)
+			assert.False(t, emailExists)
+
+			mockPhoneRepo.AssertExpectations(t)
+			mockEmailRepo.AssertExpectations(t)
+		})
+	}
+
+	runTest(t, "checkPhoneExistence returns error", func() {
+		mockPhoneRepo.On("Execute", ginCtx, "").Return((*bool)(nil), errors.New("phone check error")).Once()
+	}, "phone check error")
+
+	runTest(t, "checkEmailExistence returns error", func() {
+		mockPhoneRepo.On("Execute", ginCtx, "").Return((*bool)(nil), nil).Once()
+		mockEmailRepo.On("Execute", ginCtx, "").Return((*bool)(nil), errors.New("email check error")).Once()
+	}, "email check error")
 }

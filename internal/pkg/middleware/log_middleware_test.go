@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/sirupsen/logrus/hooks/test"
@@ -17,14 +18,12 @@ func TestCustomLogger(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
 	// Create a new logrus test hook to capture logs
-	logger, hook := test.NewNullLogger()
+	hook := test.NewGlobal()
 
 	// Create a Gin router with the CustomLogger middleware
 	router := gin.New()
-	// Trust the X-Forwarded-For header
-	router.SetTrustedProxies([]string{})
-
-	router.Use(CustomLogger(logger))
+	router.Use(requestid.New()) // Add request ID middleware
+	router.Use(CustomLogger())
 
 	// Add a sample route
 	router.GET("/test", func(c *gin.Context) {
@@ -45,7 +44,7 @@ func TestCustomLogger(t *testing.T) {
 	assert.JSONEq(t, `{"message":"success"}`, w.Body.String(), "Response body does not match")
 
 	// Check that the log entry was created
-	assert.Len(t, hook.Entries, 1, "Expected one log entry")
+	assert.Len(t, hook.AllEntries(), 1, "Expected one log entry")
 	entry := hook.LastEntry()
 	assert.Equal(t, logrus.InfoLevel, entry.Level, "Expected log level to be info")
 	assert.Equal(t, "Request completed", entry.Message, "Expected log message to match")
@@ -57,4 +56,5 @@ func TestCustomLogger(t *testing.T) {
 	assert.Equal(t, "/test", fields["path"], "Log field 'path' does not match")
 	assert.NotEmpty(t, fields["latency"], "Log field 'latency' should not be empty")
 	assert.Equal(t, "192.168.1.1", fields["client_ip"], "Log field 'client_ip' does not match expected IP")
+	assert.NotEmpty(t, fields["request_id"], "Log field 'request_id' should not be empty")
 }
