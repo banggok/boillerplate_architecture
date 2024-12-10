@@ -63,6 +63,7 @@ func TestCustomRecoveryMiddleware_CustomError(t *testing.T) {
 	// Assertions
 	assert.Equal(t, http.StatusBadRequest, w.Code, "Expected status code 400")
 	assert.JSONEq(t, `{
+		"code": "INVALID_REQUEST",
 		"status": "error",
 		"message": "Invalid input provided",
 		"details": {"field": "email"}

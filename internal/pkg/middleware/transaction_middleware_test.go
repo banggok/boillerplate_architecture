@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"appointment_management_system/internal/pkg/constants"
 	"database/sql"
 	"errors"
 	"net/http"
@@ -31,8 +32,7 @@ func TestTransactionMiddleware(t *testing.T) {
 
 	// Add a test route for write operations
 	router.POST("/write", func(c *gin.Context) {
-		// Retrieve the transaction from the context
-		tx, exists := c.Get("db_tx")
+		tx, exists := c.Get(constants.DBTRANSACTION)
 		assert.True(t, exists, "Transaction should exist in context")
 		assert.NotNil(t, tx, "Transaction should not be nil")
 		c.JSON(http.StatusOK, gin.H{"status": "write successful"})
@@ -40,8 +40,7 @@ func TestTransactionMiddleware(t *testing.T) {
 
 	// Add a test route for read operations
 	router.GET("/read", func(c *gin.Context) {
-		// Retrieve the transaction from the context
-		tx, exists := c.Get("db_tx")
+		tx, exists := c.Get(constants.DBTRANSACTION)
 		assert.True(t, exists, "Transaction should exist in context")
 		assert.NotNil(t, tx, "Transaction should not be nil")
 		c.JSON(http.StatusOK, gin.H{"status": "read successful"})
@@ -89,13 +88,13 @@ func (m *MockDB) Rollback() *gorm.DB {
 
 func TestTransactionMiddlewareRollbackAndCommit(t *testing.T) {
 	// Create mock master and slave DB connections
-	masterMock, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	master, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	slave, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 
 	// Create Gin engine
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	router.Use(TransactionMiddleware(masterMock, slave))
+	router.Use(TransactionMiddleware(master, slave))
 
 	// Add a route to simulate successful processing
 	router.POST("/commit", func(c *gin.Context) {
@@ -104,19 +103,14 @@ func TestTransactionMiddlewareRollbackAndCommit(t *testing.T) {
 
 	// Add a route to simulate an error during processing
 	router.POST("/rollback", func(c *gin.Context) {
-		c.Error(errors.New("simulated processing error")) // Register an error to trigger rollback
+		c.Error(errors.New("simulated processing error"))
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "rollback triggered"})
-	})
-
-	router.POST("/panic", func(c *gin.Context) {
-		panic("mock panic")
 	})
 
 	// Test commit case
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/commit", nil)
 	router.ServeHTTP(w, req)
-
 	assert.Equal(t, http.StatusOK, w.Code, "Expected status code 200 for commit case")
 	assert.JSONEq(t, `{"status":"commit successful"}`, w.Body.String())
 
@@ -124,18 +118,8 @@ func TestTransactionMiddlewareRollbackAndCommit(t *testing.T) {
 	w = httptest.NewRecorder()
 	req, _ = http.NewRequest("POST", "/rollback", nil)
 	router.ServeHTTP(w, req)
-
 	assert.Equal(t, http.StatusInternalServerError, w.Code, "Expected status code 500 for rollback case")
 	assert.JSONEq(t, `{"error":"rollback triggered"}`, w.Body.String())
-
-	// Test panic case
-	w = httptest.NewRecorder()
-	req, _ = http.NewRequest("POST", "/panic", nil)
-	router.ServeHTTP(w, req)
-
-	assert.Equal(t, http.StatusInternalServerError, w.Code, "Expected status code 500 for panic case")
-	assert.JSONEq(t, `{"error":"Unexpected server error"}`, w.Body.String())
-
 }
 
 func TestHandleWriteTransaction_RollbackError(t *testing.T) {
@@ -144,18 +128,14 @@ func TestHandleWriteTransaction_RollbackError(t *testing.T) {
 
 	// Create a mock SQL database
 	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to open mock sql db, got error: %v", err)
-	}
+	assert.NoError(t, err, "Failed to open mock sql db")
 	defer db.Close()
 
 	// Open a GORM DB connection using the mock database
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
 	}), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("Failed to open gorm db, got error: %v", err)
-	}
+	assert.NoError(t, err, "Failed to open gorm db")
 
 	// Set expectations
 	mock.ExpectBegin()
@@ -163,9 +143,7 @@ func TestHandleWriteTransaction_RollbackError(t *testing.T) {
 
 	// Begin a transaction
 	tx := gormDB.Begin()
-	if tx.Error != nil {
-		t.Fatalf("Failed to begin transaction: %v", tx.Error)
-	}
+	assert.NoError(t, tx.Error, "Failed to begin transaction")
 
 	// Create a test Gin context with a response recorder
 	w := httptest.NewRecorder()
@@ -177,14 +155,8 @@ func TestHandleWriteTransaction_RollbackError(t *testing.T) {
 	// Call the function under test
 	handleWriteTransaction(tx, c)
 
-	// Assert the response
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.JSONEq(t, `{"error": "Failed to rollback transaction"}`, w.Body.String())
-
 	// Ensure all expectations were met
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet(), "Unfulfilled expectations")
 }
 
 func TestHandleWriteTransaction_CommitError(t *testing.T) {
@@ -193,18 +165,14 @@ func TestHandleWriteTransaction_CommitError(t *testing.T) {
 
 	// Create a mock SQL database
 	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("Failed to open mock sql db, got error: %v", err)
-	}
+	assert.NoError(t, err, "Failed to open mock sql db")
 	defer db.Close()
 
 	// Open a GORM DB connection using the mock database
 	gormDB, err := gorm.Open(postgres.New(postgres.Config{
 		Conn: db,
 	}), &gorm.Config{})
-	if err != nil {
-		t.Fatalf("Failed to open gorm db, got error: %v", err)
-	}
+	assert.NoError(t, err, "Failed to open gorm db")
 
 	// Set expectations
 	mock.ExpectBegin()
@@ -212,26 +180,53 @@ func TestHandleWriteTransaction_CommitError(t *testing.T) {
 
 	// Begin a transaction
 	tx := gormDB.Begin()
-	if tx.Error != nil {
-		t.Fatalf("Failed to begin transaction: %v", tx.Error)
-	}
+	assert.NoError(t, tx.Error, "Failed to begin transaction")
 
 	// Create a test Gin context with a response recorder
 	w := httptest.NewRecorder()
 	c, _ := gin.CreateTestContext(w)
 
-	// Ensure no errors in the Gin context
-	assert.Empty(t, c.Errors)
-
 	// Call the function under test
 	handleWriteTransaction(tx, c)
 
-	// Assert the response
-	assert.Equal(t, http.StatusInternalServerError, w.Code)
-	assert.JSONEq(t, `{"error": "Failed to commit transaction"}`, w.Body.String())
-
 	// Ensure all expectations were met
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("There were unfulfilled expectations: %s", err)
-	}
+	assert.NoError(t, mock.ExpectationsWereMet(), "Unfulfilled expectations")
+}
+
+func TestRollbackOnPanic(t *testing.T) {
+	// Initialize Gin in test mode
+	gin.SetMode(gin.TestMode)
+
+	// Create a mock SQL database
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err, "Failed to create mock SQL database")
+	defer db.Close()
+
+	// Open a GORM DB connection using the mock database
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{Conn: db}), &gorm.Config{})
+	assert.NoError(t, err, "Failed to open GORM DB connection")
+
+	// Set expectations for the mock database
+	mock.ExpectBegin()
+	mock.ExpectRollback()
+
+	// Begin a transaction
+	tx := gormDB.Begin()
+	assert.NoError(t, tx.Error, "Failed to begin transaction")
+
+	// Create a test Gin context with a response recorder
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	// Simulate a panic in the context and call rollbackOnPanic
+	func() {
+		defer rollbackOnPanic(tx, c) // Rollback should handle the panic
+		panic("simulated panic")     // Trigger a panic
+	}()
+
+	// Ensure the context was aborted
+	assert.True(t, c.IsAborted(), "Context should be aborted")
+
+	// Verify that rollback was called exactly once
+	assert.NoError(t, mock.ExpectationsWereMet(), "Rollback was not called as expected")
 }

@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"appointment_management_system/internal/pkg/constants"
-	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -48,9 +47,8 @@ func rollbackOnPanic(tx *gorm.DB, c *gin.Context) {
 	if r := recover(); r != nil {
 		tx.Rollback()
 		log.WithField("panic", r).Error("Panic occurred, transaction rolled back")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Unexpected server error",
-		})
+		c.Abort()
+		return
 	}
 }
 
@@ -66,9 +64,7 @@ func handleWriteTransaction(tx *gorm.DB, c *gin.Context) {
 	if len(c.Errors) > 0 {
 		if err := tx.Rollback().Error; err != nil {
 			log.WithFields(log.Fields{"error": err}).Error("Failed to rollback transaction")
-			c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-				"error": "Failed to rollback transaction",
-			})
+			c.Abort()
 			return
 		}
 		log.Info("Transaction rolled back due to errors")
@@ -77,9 +73,7 @@ func handleWriteTransaction(tx *gorm.DB, c *gin.Context) {
 
 	if err := tx.Commit().Error; err != nil {
 		log.WithFields(log.Fields{"error": err}).Error("Failed to commit transaction")
-		c.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
-			"error": "Failed to commit transaction",
-		})
+		c.Abort()
 		return
 	}
 

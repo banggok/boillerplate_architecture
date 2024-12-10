@@ -172,11 +172,10 @@ func setupRouter(
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
-	router.Use(middleware.CustomRecoveryMiddleware())
 	router.Use(middleware.CustomLogger())
 	router.Use(ginmiddleware.NewMiddleware(rateLimiter))
 	router.Use(middleware.TransactionMiddleware(db.Master, db.Slave))
-	router.Use(middleware.ErrorHandlingMiddleware())
+	router.Use(middleware.CustomRecoveryMiddleware())
 
 	// Health route
 	router.GET("/health", func(c *gin.Context) {

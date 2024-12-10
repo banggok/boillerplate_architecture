@@ -32,7 +32,7 @@ func (m *MockTenantRegisterUsecase) Execute(ctx *gin.Context, request dto.Regist
 // Setup a fresh test router for each test case
 func setupTestRouter(handler TenantRegisterHandler) *gin.Engine {
 	router := gin.Default()
-	router.Use(middleware.ErrorHandlingMiddleware())
+	router.Use(middleware.CustomRecoveryMiddleware())
 	router.POST("/v1/tenants/register", handler.Register)
 	return router
 }
