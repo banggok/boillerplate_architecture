@@ -5,9 +5,11 @@ package main
 
 import (
 	"appointment_management_system/internal/config"
-	"appointment_management_system/internal/domain/tenants/repository"
-	"appointment_management_system/internal/domain/tenants/rest/v1/register"
-	"appointment_management_system/internal/pkg/middleware"
+	"appointment_management_system/internal/domain/tenants/delivery"
+	"appointment_management_system/internal/pkg/custom_errors"
+	log_middleware "appointment_management_system/internal/pkg/middleware/log"
+	"appointment_management_system/internal/pkg/middleware/recovery"
+	"appointment_management_system/internal/pkg/middleware/transaction"
 	"context"
 	"database/sql"
 	"fmt"
@@ -21,7 +23,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	log "github.com/sirupsen/logrus"
 	"github.com/ulule/limiter/v3"
 	ginmiddleware "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -53,7 +54,6 @@ func main() {
 	config.SetupLogging()
 	config.SetTimezone()
 	appConfig := loadAppConfig()
-	validator := config.SetupValidator()
 	rateLimiter := setupRateLimiter(appConfig.RateLimit)
 
 	dbConn, err := connectDatabase(appConfig.DBConfig)
@@ -62,7 +62,7 @@ func main() {
 	}
 	defer cleanupDatabase(dbConn)
 
-	router := setupRouter(dbConn, validator, rateLimiter)
+	router := setupRouter(dbConn, rateLimiter)
 	runServer(router, appConfig)
 }
 
@@ -102,13 +102,14 @@ func connectDatabase(cfg DBConfig) (*DBConnection, error) {
 		Logger: dbLogger,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to connect to master database: %w", err)
+		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to connect database")
 	}
 
 	// Configure the master connection pool
 	sqlDB, err := master.DB()
 	if err != nil {
-		return nil, fmt.Errorf("failed to get master database connection pool: %w", err)
+		return nil, custom_errors.New(
+			err, custom_errors.InternalServerError, "failed to get master database connection pool")
 	}
 	configureConnectionPool(sqlDB, "master")
 
@@ -160,7 +161,6 @@ func cleanupDatabase(conn *DBConnection) {
 
 func setupRouter(
 	db *DBConnection,
-	validator *validator.Validate,
 	rateLimiter *limiter.Limiter,
 ) *gin.Engine {
 	router := gin.Default()
@@ -172,10 +172,10 @@ func setupRouter(
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
-	router.Use(middleware.CustomLogger())
+	router.Use(log_middleware.CustomLogger())
 	router.Use(ginmiddleware.NewMiddleware(rateLimiter))
-	router.Use(middleware.TransactionMiddleware(db.Master, db.Slave))
-	router.Use(middleware.CustomRecoveryMiddleware())
+	router.Use(transaction.CustomTransaction(db.Master, db.Slave))
+	router.Use(recovery.CustomRecoveryMiddleware())
 
 	// Health route
 	router.GET("/health", func(c *gin.Context) {
@@ -184,16 +184,13 @@ func setupRouter(
 
 	// API Routes
 	api := router.Group("/api")
-	v1 := api.Group("/v1")
-	setupTenantRoutes(v1, validator)
+	setupRoutes(api)
 
 	return router
 }
 
-func setupTenantRoutes(v1 *gin.RouterGroup, validator *validator.Validate) {
-	tenantGroup := v1.Group("/tenants")
-	createTenantRepo := repository.NewTenantCreateRepository()
-	register.NewTenantV1RegisterRoutes(tenantGroup, validator, createTenantRepo)
+func setupRoutes(api *gin.RouterGroup) {
+	delivery.RegisterTenantRoutes(api)
 }
 
 func runServer(router *gin.Engine, cfg AppConfig) {

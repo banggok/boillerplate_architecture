@@ -28,7 +28,7 @@ code-review:
 		exit 1; \
 	fi
 	
-	go run ./cmd/code_review/
+	go run ./tools/code_review/
 
 run:
 	go run ./cmd/app/

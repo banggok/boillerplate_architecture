@@ -1,5 +1,16 @@
 definitions:
-  dto.Account:
+  custom_errors.CustomError:
+    properties:
+      code:
+        type: integer
+      details:
+        additionalProperties:
+          type: string
+        type: object
+      message:
+        type: string
+    type: object
+  register.RegisterTenantAccountRequest:
     properties:
       email:
         description: Admin's email
@@ -17,12 +28,12 @@ definitions:
     - email
     - name
     type: object
-  dto.RegisterTenantRequest:
+  register.RegisterTenantRequest:
     description: Tenant registration request body
     properties:
       account:
         allOf:
-        - $ref: '#/definitions/dto.Account'
+        - $ref: '#/definitions/register.RegisterTenantAccountRequest'
         description: Admin user details
       address:
         description: Tenant's address
@@ -59,7 +70,7 @@ definitions:
     - name
     - timezone
     type: object
-  dto.RegisterTenantResponse:
+  register.RegisterTenantResponse:
     properties:
       address:
         type: string
@@ -82,20 +93,6 @@ definitions:
       updated_at:
         type: string
     type: object
-  middleware.CustomError:
-    properties:
-      code:
-        description: Custom error code
-        type: string
-      details:
-        additionalProperties:
-          type: string
-        description: Additional details
-        type: object
-      message:
-        description: Human-readable message
-        type: string
-    type: object
 info:
   contact: {}
   title: Appointment Management System API
@@ -112,22 +109,22 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/dto.RegisterTenantRequest'
+          $ref: '#/definitions/register.RegisterTenantRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dto.RegisterTenantResponse'
+            $ref: '#/definitions/register.RegisterTenantResponse'
         "400":
           description: Invalid request payload
           schema:
-            $ref: '#/definitions/middleware.CustomError'
+            $ref: '#/definitions/custom_errors.CustomError'
         "422":
           description: Failed to register tenant
           schema:
-            $ref: '#/definitions/middleware.CustomError'
+            $ref: '#/definitions/custom_errors.CustomError'
       summary: Register Tenant
       tags:
       - Tenants

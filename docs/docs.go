@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterTenantRequest"
+                            "$ref": "#/definitions/register.RegisterTenantRequest"
                         }
                     }
                 ],
@@ -43,19 +43,19 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dto.RegisterTenantResponse"
+                            "$ref": "#/definitions/register.RegisterTenantResponse"
                         }
                     },
                     "400": {
                         "description": "Invalid request payload",
                         "schema": {
-                            "$ref": "#/definitions/middleware.CustomError"
+                            "$ref": "#/definitions/custom_errors.CustomError"
                         }
                     },
                     "422": {
                         "description": "Failed to register tenant",
                         "schema": {
-                            "$ref": "#/definitions/middleware.CustomError"
+                            "$ref": "#/definitions/custom_errors.CustomError"
                         }
                     }
                 }
@@ -63,7 +63,24 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "dto.Account": {
+        "custom_errors.CustomError": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "details": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "register.RegisterTenantAccountRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -87,7 +104,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RegisterTenantRequest": {
+        "register.RegisterTenantRequest": {
             "description": "Tenant registration request body",
             "type": "object",
             "required": [
@@ -101,7 +118,7 @@ const docTemplate = `{
                     "description": "Admin user details",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/dto.Account"
+                            "$ref": "#/definitions/register.RegisterTenantAccountRequest"
                         }
                     ]
                 },
@@ -143,7 +160,7 @@ const docTemplate = `{
                 }
             }
         },
-        "dto.RegisterTenantResponse": {
+        "register.RegisterTenantResponse": {
             "type": "object",
             "properties": {
                 "address": {
@@ -174,26 +191,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "middleware.CustomError": {
-            "type": "object",
-            "properties": {
-                "code": {
-                    "description": "Custom error code",
-                    "type": "string"
-                },
-                "details": {
-                    "description": "Additional details",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "message": {
-                    "description": "Human-readable message",
                     "type": "string"
                 }
             }
