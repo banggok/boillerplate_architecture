@@ -2,7 +2,8 @@ package entity
 
 import (
 	"appointment_management_system/internal/pkg/custom_errors"
-	"time"
+	"appointment_management_system/internal/pkg/password"
+	"log"
 )
 
 type Account struct {
@@ -10,29 +11,60 @@ type Account struct {
 	name     string `validate:"required,alpha_space" example:"John Doe"`
 	email    string `validate:"required,email" example:"admin@example.com"`
 	phone    string `validate:"omitempty,e164" example:"+1234567890"`
+	password string
 	tenantId uint
 	tenant   *Tenant
 }
 
-type NewAccountParams struct {
-	Name   string `validate:"required,alpha_space" example:"John Doe"`
-	Email  string `validate:"required,email" example:"admin@example.com"`
-	Phone  string `validate:"omitempty,e164" example:"+1234567890"`
-	Tenant *Tenant
+type accountIdentity struct {
+	name  string `validate:"required,alpha_space" example:"John Doe"`
+	email string `validate:"required,email" example:"admin@example.com"`
+	phone string `validate:"omitempty,e164" example:"+1234567890"`
 }
 
-type MakeAccountParams struct {
-	ID        uint
-	Name      string `validate:"required,alpha_space" example:"John Doe"`
-	Email     string `validate:"required,email" example:"admin@example.com"`
-	Phone     string `validate:"omitempty,e164" example:"+1234567890"`
-	TenantId  uint   `validate:"required"`
-	Tenant    *Tenant
-	CreatedAt time.Time
-	UpdatedAt time.Time
+func NewAccountIdentity(name, email, phone string) accountIdentity {
+	return accountIdentity{
+		name:  name,
+		email: email,
+		phone: phone,
+	}
 }
 
-func MakeAccount(params MakeAccountParams) (*Account, error) {
+type accountTenant struct {
+	tenantId uint
+	tenant   *Tenant
+}
+
+func NewAccountTenant(tenantId uint, tenant *Tenant) accountTenant {
+	return accountTenant{
+		tenantId: tenantId,
+		tenant:   tenant,
+	}
+}
+
+type newAccountParams struct {
+	accountIdentity
+	tenant *Tenant
+}
+
+type makeAccountParams struct {
+	metadata
+	accountIdentity
+	accountTenant
+	password string `validate:"required"`
+}
+
+func MakeAccount(
+	metadata metadata,
+	accountIdentity accountIdentity,
+	accountTenant accountTenant,
+	password string) (*Account, error) {
+	params := makeAccountParams{
+		metadata:        metadata,
+		accountIdentity: accountIdentity,
+		accountTenant:   accountTenant,
+		password:        password,
+	}
 	if err := validate.Struct(params); err != nil {
 		return nil, custom_errors.New(
 			err,
@@ -42,32 +74,51 @@ func MakeAccount(params MakeAccountParams) (*Account, error) {
 
 	return &Account{
 		entity: entity{
-			id:        params.ID,
-			createdAt: params.CreatedAt,
-			updatedAt: params.UpdatedAt,
+			id:        params.id,
+			createdAt: params.createdAt,
+			updatedAt: params.updatedAt,
 		},
-		name:     params.Name,
-		email:    params.Email,
-		phone:    params.Phone,
-		tenantId: params.TenantId,
-		tenant:   params.Tenant,
+		name:     params.name,
+		email:    params.email,
+		phone:    params.phone,
+		tenantId: params.tenantId,
+		tenant:   params.tenant,
+		password: params.password,
 	}, nil
 }
 
-func NewAccount(params NewAccountParams) (*Account, error) {
+func NewAccount(accountIdentity accountIdentity, tenant *Tenant) (*Account, *string, error) {
+	params := newAccountParams{
+		accountIdentity: accountIdentity,
+		tenant:          tenant,
+	}
 	if err := validate.Struct(params); err != nil {
-		return nil, custom_errors.New(
+		return nil, nil, custom_errors.New(
 			err,
 			custom_errors.AccountUnprocessEntity,
 			"failed to validate new account entity")
 	}
 
-	return &Account{
-		entity: entity{},
-		name:   params.Name,
-		email:  params.Email,
-		phone:  params.Phone,
-	}, nil
+	plain, hashed, err := password.GeneratePassword(8)
+	if err != nil {
+		return nil, nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to generate password")
+	}
+
+	log.Printf("plain password: %s", *plain)
+
+	account := &Account{
+		name:     params.name,
+		email:    params.email,
+		phone:    params.phone,
+		password: *hashed,
+	}
+
+	if params.tenant != nil {
+		account.tenantId = params.tenant.GetID()
+		account.tenant = params.tenant
+	}
+
+	return account, plain, nil
 }
 
 // GetTenantId retrieves the id of the tenant account.
@@ -78,6 +129,11 @@ func (a *Account) GetTenantId() uint {
 // GetName retrieves the name of the account.
 func (a *Account) GetName() string {
 	return a.name
+}
+
+// GetPassword retrieves the hash password of the account.
+func (a *Account) GetPassword() string {
+	return a.password
 }
 
 // GetEmail retrieves the email of the account.

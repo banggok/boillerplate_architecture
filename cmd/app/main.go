@@ -5,7 +5,7 @@ package main
 
 import (
 	"appointment_management_system/internal/config"
-	"appointment_management_system/internal/domain/tenants/delivery"
+	"appointment_management_system/internal/delivery/rest"
 	"appointment_management_system/internal/pkg/custom_errors"
 	log_middleware "appointment_management_system/internal/pkg/middleware/log"
 	"appointment_management_system/internal/pkg/middleware/recovery"
@@ -70,7 +70,7 @@ func loadAppConfig() AppConfig {
 	return AppConfig{
 		Port:             getConfigValue("PORT", "8080"),
 		CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "https://example.com"),
-		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 10),
+		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 100),
 		GracefulShutdown: time.Duration(getConfigValueAsInt("SHUTDOWN_TIMEOUT", 5)) * time.Second,
 		DBConfig: DBConfig{
 			MasterDSN: getDSN("MASTER"),
@@ -190,7 +190,7 @@ func setupRouter(
 }
 
 func setupRoutes(api *gin.RouterGroup) {
-	delivery.RegisterTenantRoutes(api)
+	rest.RegisterRoutes(api)
 }
 
 func runServer(router *gin.Engine, cfg AppConfig) {

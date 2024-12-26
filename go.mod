@@ -3,12 +3,14 @@ module appointment_management_system
 go 1.22.8
 
 require (
+	github.com/alexedwards/argon2id v1.0.0
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/requestid v1.0.3
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-playground/validator/v10 v10.23.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/swaggo/swag v1.16.4
+	golang.org/x/sync v0.10.0
 	golang.org/x/tools v0.28.0
 	gorm.io/driver/mysql v1.5.7
 	gorm.io/gorm v1.25.12
@@ -27,7 +29,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	golang.org/x/mod v0.22.0 // indirect
-	golang.org/x/sync v0.10.0 // indirect
 )
 
 require (

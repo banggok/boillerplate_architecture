@@ -36,7 +36,7 @@ func newTenantRegisterHandler(
 // @Success 201 {object} RegisterTenantResponse
 // @Failure 400 {object} custom_errors.CustomError "Invalid request payload"
 // @Failure 422 {object} custom_errors.CustomError "Failed to register tenant"
-// @Router /api/v1/tenants/register [post]
+// @Router /api/v1/tenants/ [post]
 func (h *tenantRegisterHandler) Register(c *gin.Context) {
 	var request RegisterTenantRequest
 

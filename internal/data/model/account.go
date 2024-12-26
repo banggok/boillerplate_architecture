@@ -12,6 +12,7 @@ type Account struct {
 	Name      string    `gorm:"type:varchar(100);not null"`
 	Email     string    `gorm:"type:varchar(255);unique;not null"`
 	Phone     string    `gorm:"type:varchar(20);unique;not null"`
+	Password  string    `gorm:"type:text;not null"`                            // Hashed password
 	TenantID  uint      `gorm:"not null;index"`                                // Foreign key
 	Tenant    *Tenant   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Relationship
 	CreatedAt time.Time `gorm:"autoCreateTime"`
@@ -35,6 +36,7 @@ func NewAccountModel(entity entity.Account) Account {
 		TenantID:  entity.GetTenantId(),
 		CreatedAt: entity.GetCreatedAt(),
 		UpdatedAt: entity.GetUpdatedAt(),
+		Password:  entity.GetPassword(),
 	}
 	if entity.GetTenant() != nil {
 		tenant := NewTenantModel(*entity.GetTenant())
@@ -44,21 +46,18 @@ func NewAccountModel(entity entity.Account) Account {
 }
 
 func (m *Account) ToEntity() (*entity.Account, error) {
-	accountParams := entity.MakeAccountParams{
-		ID:        m.ID,
-		Name:      m.Name,
-		Email:     m.Email,
-		Phone:     m.Phone,
-		TenantId:  m.TenantID,
-		CreatedAt: m.CreatedAt,
-		UpdatedAt: m.UpdatedAt,
-	}
+	var tenantParam *entity.Tenant
 	if m.Tenant != nil {
-		tenant, err := m.Tenant.ToEntity()
+		var err error
+		tenantParam, err = m.Tenant.ToEntity()
 		if err != nil {
 			return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed convert account model to entity")
 		}
-		accountParams.Tenant = tenant
 	}
-	return entity.MakeAccount(accountParams)
+	return entity.MakeAccount(
+		entity.NewMetadata(m.ID, m.CreatedAt, m.UpdatedAt),
+		entity.NewAccountIdentity(m.Name, m.Email, m.Phone),
+		entity.NewAccountTenant(m.TenantID, tenantParam),
+		m.Password,
+	)
 }

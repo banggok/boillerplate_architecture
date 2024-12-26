@@ -12,17 +12,17 @@ type RegisterTenantRequest struct {
 	Name         string                       `json:"name" validate:"required" example:"Example Tenant"`               // Tenant's name
 	Address      string                       `json:"address" validate:"omitempty,max=255" example:"123 Main Street"`  // Tenant's address
 	Email        string                       `json:"email" validate:"required,email" example:"tenant@example.com"`    // Tenant's email
-	Phone        string                       `json:"phone" validate:"omitempty,e164" example:"+1987654321"`           // Tenant's phone
+	Phone        string                       `json:"phone" validate:"required,e164" example:"+1987654321"`            // Tenant's phone
 	Timezone     string                       `json:"timezone" validate:"required,iana_tz" example:"America/New_York"` // Tenant's timezone
-	OpeningHours string                       `json:"opening_hours" validate:"omitempty,time_format" example:"09:00"`  // Opening hours
-	ClosingHours string                       `json:"closing_hours" validate:"omitempty,time_format" example:"18:00"`  // Closing hours
+	OpeningHours string                       `json:"opening_hours" validate:"required,time_format" example:"09:00"`   // Opening hours
+	ClosingHours string                       `json:"closing_hours" validate:"required,time_format" example:"18:00"`   // Closing hours
 	Account      RegisterTenantAccountRequest `json:"account" validate:"required"`                                     // Admin user details
 }
 
 type RegisterTenantAccountRequest struct {
 	Name  string `json:"name" validate:"required,alpha_space" example:"John Doe"`     // Admin's name
 	Email string `json:"email" validate:"required,email" example:"admin@example.com"` // Admin's email
-	Phone string `json:"phone" validate:"omitempty,e164" example:"+1234567890"`       // Admin's phone
+	Phone string `json:"phone" validate:"required,e164" example:"+1234567890"`        // Admin's phone
 }
 
 // CustomValidationMessages maps validation errors to user-friendly messages.
@@ -48,13 +48,13 @@ func mapValidationMessage(field string) string {
 		"RegisterTenantRequest.Name":          "Name is required.",
 		"RegisterTenantRequest.Address":       "Address must not exceed 255 characters.",
 		"RegisterTenantRequest.Email":         "Email is required and must be in a valid format.",
-		"RegisterTenantRequest.Phone":         "Phone must be in a valid international format (E.164).",
+		"RegisterTenantRequest.Phone":         "Phone is required and must be in a valid international format (E.164).",
 		"RegisterTenantRequest.Timezone":      "Timezone is required and must be a valid IANA timezone.",
-		"RegisterTenantRequest.OpeningHours":  "Opening hours must be in the format HH:mm.",
-		"RegisterTenantRequest.ClosingHours":  "Closing hours must be in the format HH:mm.",
+		"RegisterTenantRequest.OpeningHours":  "Opening hours is required and must be in the format HH:mm.",
+		"RegisterTenantRequest.ClosingHours":  "Closing hours is required and must be in the format HH:mm.",
 		"RegisterTenantRequest.Account.Name":  "Account name is required and can only contain letters and spaces.",
 		"RegisterTenantRequest.Account.Email": "Account email is required and must be in a valid format.",
-		"RegisterTenantRequest.Account.Phone": "Account phone must be in a valid international format (E.164).",
+		"RegisterTenantRequest.Account.Phone": "Account phone is required and must be in a valid international format (E.164).",
 	}
 	if message, exists := fieldMessages[field]; exists {
 		return message

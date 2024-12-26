@@ -6,7 +6,7 @@ import (
 )
 
 type Tenant struct {
-	Model
+	Metadata
 	Name         string `gorm:"type:varchar(255);not null"`              // Tenant's name, cannot be null
 	Address      string `gorm:"type:varchar(255)"`                       // Optional, maximum 255 characters
 	Email        string `gorm:"type:varchar(255);not null;unique;index"` // Unique and indexed email
@@ -27,7 +27,7 @@ func (Tenant) NotFoundError() custom_errors.ErrorCode {
 
 func NewTenantModel(entity entity.Tenant) Tenant {
 	tenant := Tenant{
-		Model: Model{
+		Metadata: Metadata{
 			ID:        entity.GetID(),
 			CreatedAt: entity.GetCreatedAt(),
 			UpdatedAt: entity.GetUpdatedAt(),
@@ -52,42 +52,21 @@ func NewTenantModel(entity entity.Tenant) Tenant {
 }
 
 func (m *Tenant) ToEntity() (*entity.Tenant, error) {
-	param := entity.MakeTenantParams{
-		Metadata: entity.Metadata{
-			ID:        m.ID,
-			CreatedAt: m.CreatedAt,
-			UpdatedAt: m.UpdatedAt,
-		},
-		Name:         m.Name,
-		Address:      m.Address,
-		Email:        m.Email,
-		Phone:        m.Phone,
-		Timezone:     m.Timezone,
-		OpeningHours: m.OpeningHours,
-		ClosingHours: m.ClosingHours,
-	}
-
+	var accountParam *[]entity.Account
 	if m.Accounts != nil {
 		accountEntities := make([]entity.Account, 0)
 		for _, accountModel := range *m.Accounts {
-			accountEntity, err := entity.MakeAccount(
-				entity.MakeAccountParams{
-					ID:        accountModel.ID,
-					Name:      accountModel.Name,
-					Email:     accountModel.Email,
-					Phone:     accountModel.Phone,
-					TenantId:  accountModel.TenantID,
-					CreatedAt: accountModel.CreatedAt,
-					UpdatedAt: accountModel.UpdatedAt,
-				},
-			)
+			accountEntity, err := accountModel.ToEntity()
 			if err != nil {
 				return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert account model to entity")
 			}
 			accountEntities = append(accountEntities, *accountEntity)
 		}
-		param.Account = &accountEntities
+		accountParam = &accountEntities
 	}
 
-	return entity.MakeTenant(param)
+	return entity.MakeTenant(entity.NewMetadata(m.ID, m.CreatedAt, m.UpdatedAt),
+		entity.NewTenantIdentity(m.Name, m.Email, m.Phone),
+		entity.NewTenantStoreInfo(m.Address, m.Timezone, m.OpeningHours, m.ClosingHours),
+		accountParam)
 }

@@ -4,12 +4,13 @@ CREATE TABLE IF NOT EXISTS accounts (
     name VARCHAR(100) NOT NULL,                   -- Account name, cannot be null
     email VARCHAR(255) NOT NULL UNIQUE,           -- Unique and indexed email
     phone VARCHAR(20) NOT NULL UNIQUE,            -- Unique and indexed phone number
+    password TEXT NOT NULL,                       -- hashed password
     tenant_id BIGINT,                             -- Foreign key referencing tenants (nullable for SET NULL)
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- Automatically set when the record is created
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, -- Automatically updated
     CONSTRAINT fk_tenant_id FOREIGN KEY (tenant_id) REFERENCES tenants (id)
         ON UPDATE CASCADE
-        ON DELETE SET NULL                        -- Foreign key constraints
+        ON DELETE CASCADE                        -- Foreign key constraints
 );
 
 -- Check if the email index exists and create it if it doesn't

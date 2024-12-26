@@ -20,7 +20,6 @@ SWAG_BIN=swag
 code-review:
 	go test ./internal/... -race -coverprofile=coverage.out && go tool cover -func=coverage.out > coverage.txt
 	
-	@echo "Running nestif to check for nested if statements with complexity > 3..."
 	@output=$$(nestif --min 4 ./internal/...); \
 	if [ -n "$$output" ]; then \
 		echo "$$output"; \

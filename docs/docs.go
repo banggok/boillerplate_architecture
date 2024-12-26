@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/tenants/register": {
+        "/api/v1/tenants/": {
             "post": {
                 "description": "Register a new tenant in the system",
                 "consumes": [
@@ -84,7 +84,8 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "email",
-                "name"
+                "name",
+                "phone"
             ],
             "properties": {
                 "email": {
@@ -109,8 +110,11 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "account",
+                "closing_hours",
                 "email",
                 "name",
+                "opening_hours",
+                "phone",
                 "timezone"
             ],
             "properties": {
@@ -163,32 +167,11 @@ const docTemplate = `{
         "register.RegisterTenantResponse": {
             "type": "object",
             "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "closing_hours": {
-                    "type": "string"
-                },
                 "created_at": {
-                    "type": "string"
-                },
-                "email": {
                     "type": "string"
                 },
                 "id": {
                     "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "opening_hours": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "timezone": {
-                    "type": "string"
                 },
                 "updated_at": {
                     "type": "string"

@@ -51,15 +51,17 @@ func checkFile(filename string) bool {
 					numFields := len(t.Fields.List)
 					if numFields > maxStructFields {
 						failed = true
-						fmt.Printf("Struct %s in %s has %d fields (max allowed: %d)\n",
-							ts.Name.Name, filename, numFields, maxStructFields)
+						pos := fset.Position(ts.Pos()) // Get the file position
+						fmt.Printf("Struct %s in %s:%d has %d fields (max allowed: %d)\n",
+							ts.Name.Name, pos.Filename, pos.Line, numFields, maxStructFields)
 					}
 				case *ast.InterfaceType:
 					numMethods := len(t.Methods.List)
 					if numMethods > maxInterfaceMethods {
 						failed = true
-						fmt.Printf("Interface %s in %s has %d methods (max allowed: %d)\n",
-							ts.Name.Name, filename, numMethods, maxInterfaceMethods)
+						pos := fset.Position(ts.Pos()) // Get the file position
+						fmt.Printf("Interface %s in %s:%d has %d methods (max allowed: %d)\n",
+							ts.Name.Name, pos.Filename, pos.Line, numMethods, maxInterfaceMethods)
 					}
 				}
 			}
