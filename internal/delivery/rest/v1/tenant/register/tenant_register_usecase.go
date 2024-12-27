@@ -3,9 +3,11 @@ package register
 import (
 	"appointment_management_system/internal/data/entity"
 	"appointment_management_system/internal/pkg/custom_errors"
+	"appointment_management_system/internal/services/notification/email"
 	"appointment_management_system/internal/services/tenant"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 // TenantRegisterUsecase defines the interface for registering a tenant
@@ -15,13 +17,14 @@ type TenantRegisterUsecase interface {
 
 type tenantRegisterUsecase struct {
 	createTenantService tenant.Service
+	emailService        email.Service
 }
 
 // Execute implements TenantRegisterUsecase.
 func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenantRequest) (*entity.Tenant, error) {
 
-	account, _, err := entity.NewAccount(
-		entity.NewAccountIdentity(request.Name, request.Email, request.Phone),
+	account, plainPassword, err := entity.NewAccount(
+		entity.NewAccountIdentity(request.Account.Name, request.Account.Email, request.Account.Phone),
 		nil)
 	if err != nil {
 		return nil, custom_errors.New(
@@ -49,11 +52,23 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 			"failed to new tenant")
 	}
 
+	go func() {
+		if tenant.GetAccounts() == nil || len(*tenant.GetAccounts()) == 0 {
+			logrus.Errorf("tenant account was empty")
+		}
+		account := (*tenant.GetAccounts())[0]
+		if err := t.emailService.SendWelcomeEmail(account.GetEmail(), tenant.GetName(), account.GetEmail(),
+			*plainPassword, ""); err != nil {
+			logrus.Errorf("failed to send email: %v", err.Error())
+		}
+	}()
+
 	return tenant, nil
 }
 
-func newTenantRegisterUsecase(createTenantService tenant.Service) TenantRegisterUsecase {
+func newTenantRegisterUsecase(createTenantService tenant.Service, email email.Service) TenantRegisterUsecase {
 	return &tenantRegisterUsecase{
 		createTenantService: createTenantService,
+		emailService:        email,
 	}
 }
