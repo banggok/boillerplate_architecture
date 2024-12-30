@@ -1,6 +1,6 @@
 package main
 
-// const minCoverage = 80.0
+const minCoverage = 80.0
 const (
 	dir                 = "./internal/"
 	maxLinesPerFile     = 500 // Default threshold for large files in SonarQube

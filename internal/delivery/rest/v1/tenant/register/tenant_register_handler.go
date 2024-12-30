@@ -1,7 +1,7 @@
 package register
 
 import (
-	"appointment_management_system/internal/config"
+	"appointment_management_system/internal/config/validator"
 	"appointment_management_system/internal/pkg/custom_errors"
 	"net/http"
 
@@ -72,7 +72,7 @@ func (h *tenantRegisterHandler) parseAndValidateRequest(c *gin.Context, request 
 			"invalid tenant register request payload"))
 		return err
 	}
-	validator := config.SetupValidator()
+	validator := validator.SetupValidator()
 
 	// Validate the request using the validator
 	if err := validator.Struct(request); err != nil {

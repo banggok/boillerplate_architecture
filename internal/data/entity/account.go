@@ -3,7 +3,6 @@ package entity
 import (
 	"appointment_management_system/internal/pkg/custom_errors"
 	"appointment_management_system/internal/pkg/password"
-	"log"
 )
 
 type Account struct {
@@ -100,11 +99,9 @@ func NewAccount(accountIdentity accountIdentity, tenant *Tenant) (*Account, *str
 	}
 
 	plain, hashed, err := password.GeneratePassword(8)
-	if err != nil {
+	if err != nil || plain == nil || hashed == nil {
 		return nil, nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to generate password")
 	}
-
-	log.Printf("plain password: %s", *plain)
 
 	account := &Account{
 		name:     params.name,

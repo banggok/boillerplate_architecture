@@ -1,6 +1,7 @@
 package register
 
 import (
+	"appointment_management_system/internal/config/app"
 	"appointment_management_system/internal/data/entity"
 	"appointment_management_system/internal/pkg/custom_errors"
 	"appointment_management_system/internal/services/notification/email"
@@ -53,12 +54,23 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 	}
 
 	go func() {
+		cfg := app.Setup()
+		if cfg.Environment != app.ENV_PROD {
+			return
+		}
 		if tenant.GetAccounts() == nil || len(*tenant.GetAccounts()) == 0 {
 			logrus.Errorf("tenant account was empty")
 		}
 		account := (*tenant.GetAccounts())[0]
-		if err := t.emailService.SendWelcomeEmail(account.GetEmail(), tenant.GetName(), account.GetEmail(),
-			*plainPassword, ""); err != nil {
+		if err := t.emailService.SendWelcomeEmail(
+			account.GetEmail(),
+			email.WelcomeData{
+				TenantName: tenant.GetName(),
+				Username:   account.GetEmail(),
+				Password:   *plainPassword,
+				LoginURL:   "",
+			},
+		); err != nil {
 			logrus.Errorf("failed to send email: %v", err.Error())
 		}
 	}()

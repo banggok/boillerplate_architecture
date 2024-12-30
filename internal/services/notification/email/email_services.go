@@ -1,6 +1,7 @@
 package email
 
 import (
+	"appointment_management_system/internal/config/smtp"
 	"bytes"
 	"embed"
 	"html/template"
@@ -15,7 +16,7 @@ import (
 var templatesFS embed.FS
 
 type Service interface {
-	SendWelcomeEmail(to, tenantName, username, password, loginURL string) error
+	SendWelcomeEmail(to string, data WelcomeData) error
 }
 
 type serviceImpl struct {
@@ -25,16 +26,16 @@ type serviceImpl struct {
 	appPassword string
 }
 
-func NewService() Service {
+func NewService(cfg smtp.Config) Service {
 	return &serviceImpl{
-		smtpHost:    "smtp.gmail.com",
-		smtpPort:    587,
-		senderEmail: "rtriasmono@gmail.com",
-		appPassword: "kafs gbko qmkc bxan", // Use environment variables in production for better security
+		smtpHost:    cfg.SmtpHost,
+		smtpPort:    cfg.SmtpPort,
+		senderEmail: cfg.SenderEmail,
+		appPassword: cfg.AppPassword,
 	}
 }
 
-type EmailData struct {
+type WelcomeData struct {
 	TenantName string
 	Username   string
 	Password   string
@@ -42,20 +43,12 @@ type EmailData struct {
 }
 
 // SendWelcomeEmail implements Service.
-func (s *serviceImpl) SendWelcomeEmail(to, tenantName, username, password, loginURL string) error {
+func (s *serviceImpl) SendWelcomeEmail(to string, data WelcomeData) error {
 	// Load and parse the email template from embedded FS
 	tmpl, err := template.ParseFS(templatesFS, "templates/registration_email.html")
 	if err != nil {
 		log.Printf("Failed to parse template: %v", err)
 		return err
-	}
-
-	// Prepare the data for the template
-	data := EmailData{
-		TenantName: tenantName,
-		Username:   username,
-		Password:   password,
-		LoginURL:   loginURL,
 	}
 
 	// Render the template with the data

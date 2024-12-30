@@ -6,5 +6,5 @@ func main() {
 	file_loc()
 	cyclomatic_complexity()
 	max_params()
-	// enforce_coverage()
+	enforce_coverage()
 }

@@ -40,11 +40,8 @@ func New(err error, code ErrorCode, message string, detail ...map[string]string)
 	}
 
 	// Use the first detail map if provided
-	var details map[string]string
-	detail = []map[string]string{
-		{
-			"error": err.Error(),
-		},
+	details := map[string]string{
+		"error": err.Error(),
 	}
 	if len(detail) > 0 {
 		details = detail[0]

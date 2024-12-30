@@ -1,28 +1,12 @@
-package config
+package validator
 
 import (
-	"os"
+	"log"
 	"time"
 	"unicode"
 
 	"github.com/go-playground/validator/v10"
-	log "github.com/sirupsen/logrus"
 )
-
-// SetupLogging configures the logrus logging format and level.
-func SetupLogging() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetLevel(log.InfoLevel)
-}
-
-// SetTimezone sets the application's default timezone.
-func SetTimezone() {
-	timezone := os.Getenv("TZ")
-	if timezone == "" {
-		timezone = "UTC" // Default
-	}
-	os.Setenv("TZ", timezone)
-}
 
 // SetupValidator initializes the validator and registers custom rules.
 func SetupValidator() *validator.Validate {

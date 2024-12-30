@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
@@ -41,13 +42,15 @@ func recoverFromPanic(c *gin.Context) {
 
 // Handles errors from the context and ensures consistent responses
 func handleErrors(c *gin.Context) {
+	requestId := requestid.Get(c)
 	// Handle only the first error to avoid duplication
 	if err, ok := c.Errors[0].Err.(custom_errors.CustomError); ok {
 		c.JSON(err.HTTPCode, gin.H{
-			"status":  "error",
-			"code":    err.Code,
-			"message": err.Message,
-			"details": err.Details,
+			"request_id": requestId,
+			"status":     "error",
+			"code":       err.Code,
+			"message":    err.Message,
+			"details":    err.Details,
 		})
 		return
 	}
@@ -59,8 +62,9 @@ func handleErrors(c *gin.Context) {
 	}
 	log.Errorf("Unhandled errors: %v", errorMessages)
 	c.JSON(http.StatusInternalServerError, gin.H{
-		"status":  "error",
-		"message": "An unexpected error occurred",
-		"details": errorMessages,
+		"request_id": requestId,
+		"status":     "error",
+		"message":    "An unexpected error occurred",
+		"details":    errorMessages,
 	})
 }

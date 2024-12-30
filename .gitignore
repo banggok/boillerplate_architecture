@@ -3,3 +3,4 @@ coverage.out
 .vscode/launch.json
 
 coverage.txt
+.env

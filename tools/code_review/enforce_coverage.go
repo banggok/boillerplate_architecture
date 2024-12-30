@@ -1,68 +1,75 @@
 package main
 
-// func enforce_coverage() {
-// 	file, err := os.Open("coverage.txt")
-// 	if err != nil {
-// 		fmt.Printf("Failed to open coverage.txt: %v\n", err)
-// 		os.Exit(1)
-// 	}
-// 	defer file.Close()
+import (
+	"bufio"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
 
-// 	var totalCoverage float64
-// 	var lowCoverageFunctions []string
+func enforce_coverage() {
+	file, err := os.Open("coverage.txt")
+	if err != nil {
+		fmt.Printf("Failed to open coverage.txt: %v\n", err)
+		os.Exit(1)
+	}
+	defer file.Close()
 
-// 	scanner := bufio.NewScanner(file)
-// 	for scanner.Scan() {
-// 		line := scanner.Text()
-// 		parts := strings.Fields(line)
+	var totalCoverage float64
+	var lowCoverageFunctions []string
 
-// 		if len(parts) < 2 {
-// 			continue // Skip malformed lines
-// 		}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := scanner.Text()
+		parts := strings.Fields(line)
 
-// 		if strings.HasPrefix(line, "total:") {
-// 			// Extract total coverage
-// 			if len(parts) >= 3 {
-// 				totalCoverage, err = strconv.ParseFloat(strings.TrimSuffix(parts[2], "%"), 64)
-// 				if err != nil {
-// 					fmt.Printf("Failed to parse total coverage: %v\n", err)
-// 					os.Exit(1)
-// 				}
-// 			}
-// 			continue
-// 		}
+		if len(parts) < 2 {
+			continue // Skip malformed lines
+		}
 
-// 		// Extract function name and coverage
-// 		functionName := parts[1]
-// 		path := parts[0]
-// 		coveragePercentStr := strings.TrimSuffix(parts[len(parts)-1], "%")
-// 		coverage, err := strconv.ParseFloat(coveragePercentStr, 64)
-// 		if err != nil {
-// 			fmt.Printf("Failed to parse coverage for %s: %v\n", functionName, err)
-// 			continue
-// 		}
+		if strings.HasPrefix(line, "total:") {
+			// Extract total coverage
+			if len(parts) >= 3 {
+				totalCoverage, err = strconv.ParseFloat(strings.TrimSuffix(parts[2], "%"), 64)
+				if err != nil {
+					fmt.Printf("Failed to parse total coverage: %v\n", err)
+					os.Exit(1)
+				}
+			}
+			continue
+		}
 
-// 		if coverage < minCoverage {
-// 			lowCoverageFunctions = append(lowCoverageFunctions, fmt.Sprintf("%s %s (%.2f%%)", path, functionName, coverage))
-// 		}
-// 	}
+		// Extract function name and coverage
+		functionName := parts[1]
+		path := parts[0]
+		coveragePercentStr := strings.TrimSuffix(parts[len(parts)-1], "%")
+		coverage, err := strconv.ParseFloat(coveragePercentStr, 64)
+		if err != nil {
+			fmt.Printf("Failed to parse coverage for %s: %v\n", functionName, err)
+			continue
+		}
 
-// 	if len(lowCoverageFunctions) > 0 {
-// 		fmt.Println("Functions with low coverage:")
-// 		for _, fn := range lowCoverageFunctions {
-// 			// Remove module name
-// 			parts := strings.SplitN(fn, "/", 2)
-// 			if len(parts) > 1 {
-// 				fn = parts[1]
-// 			}
-// 			fmt.Println(" -", fn)
-// 		}
-// 	}
+		if coverage < minCoverage {
+			lowCoverageFunctions = append(lowCoverageFunctions, fmt.Sprintf("%s %s (%.2f%%)", path, functionName, coverage))
+		}
+	}
 
-// 	if totalCoverage < minCoverage {
-// 		fmt.Printf("Test coverage is %.2f%%, which is below the required %.2f%%\n", totalCoverage, minCoverage)
-// 		os.Exit(1)
-// 	} else {
-// 		fmt.Printf("Test coverage is %.2f%%, which meets the required %.2f%%\n", totalCoverage, minCoverage)
-// 	}
-// }
+	if len(lowCoverageFunctions) > 0 {
+		fmt.Println("Functions with low coverage:")
+		for _, fn := range lowCoverageFunctions {
+			// Remove module name
+			parts := strings.SplitN(fn, "/", 2)
+			if len(parts) > 1 {
+				fn = parts[1]
+			}
+			fmt.Println(" -", fn)
+		}
+	}
+
+	if totalCoverage < minCoverage {
+		fmt.Printf("Test coverage is %.2f%%, which is below the required %.2f%%\n", totalCoverage, minCoverage)
+	} else {
+		fmt.Printf("Test coverage is %.2f%%, which meets the required %.2f%%\n", totalCoverage, minCoverage)
+	}
+}

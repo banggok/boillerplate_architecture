@@ -1,4 +1,4 @@
-.PHONY: code-review run docs migrate rollback create-migration force-version
+.PHONY: code-review run docs migrate rollback create-migration force-version open-coverage
 
 # Default DB configuration
 DB_MASTER_HOST ?= localhost
@@ -17,9 +17,22 @@ MIGRATIONS_DIR=./migrations
 MIGRATE_BIN=migrate
 SWAG_BIN=swag
 
+open-coverage: 
+ifeq ($(shell uname), Darwin) # macOS
+	open coverage.html
+else ifeq ($(shell uname), Linux)
+	xdg-open coverage.html
+else ifeq ($(OS), Windows_NT)
+	start coverage.html
+else
+	@echo "Unsupported OS. Please open $(COVERAGE_HTML) manually."
+endif
+
 code-review:
-	go test ./internal/... -race -coverprofile=coverage.out && go tool cover -func=coverage.out > coverage.txt
-	
+	go test ./tests/... -coverpkg=./internal/... -coverprofile=coverage.out && \
+	go tool cover -func=coverage.out > coverage.txt && \
+	go tool cover -html=coverage.out -o coverage.html
+
 	@output=$$(nestif --min 4 ./internal/...); \
 	if [ -n "$$output" ]; then \
 		echo "$$output"; \
