@@ -9,15 +9,16 @@ import (
 
 // Account struct for the accounts table
 type Account struct {
-	ID        uint      `gorm:"primaryKey;autoIncrement"`
-	Name      string    `gorm:"type:varchar(100);not null"`
-	Email     string    `gorm:"type:varchar(255);unique;not null"`
-	Phone     string    `gorm:"type:varchar(20);unique;not null"`
-	Password  string    `gorm:"type:text;not null"`                            // Hashed password
-	TenantID  uint      `gorm:"not null;index"`                                // Foreign key
-	Tenant    *Tenant   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Relationship
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	ID                   uint      `gorm:"primaryKey;autoIncrement"`
+	Name                 string    `gorm:"type:varchar(100);not null"`
+	Email                string    `gorm:"type:varchar(255);unique;not null"`
+	Phone                string    `gorm:"type:varchar(20);unique;not null"`
+	Password             string    `gorm:"type:text;not null"`                            // Hashed password
+	TenantID             uint      `gorm:"not null;index"`                                // Foreign key
+	Tenant               *Tenant   `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL"` // Relationship
+	CreatedAt            time.Time `gorm:"autoCreateTime"`
+	UpdatedAt            time.Time `gorm:"autoUpdateTime"`
+	AccountVerifications *[]AccountVerification
 }
 
 func (Account) TableName() string {
