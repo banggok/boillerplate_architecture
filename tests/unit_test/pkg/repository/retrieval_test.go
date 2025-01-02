@@ -23,7 +23,7 @@ func TestGetOne(t *testing.T) {
 	t.Run("account not found", func(t *testing.T) {
 		accountRepo := repository.NewGenericRepository[entity.Account, model.Account](model.NewAccountModel)
 
-		account, err := accountRepo.GetOne(ctx, &repository.Condition{})
+		account, err := accountRepo.GetOne(ctx)
 
 		assert.Error(t, err)
 		assert.True(t, errors.As(err, &custom_errors.CustomError{}))
@@ -39,7 +39,7 @@ func TestGetOne(t *testing.T) {
 	t.Run("tenant not found", func(t *testing.T) {
 		tenantRepo := repository.NewGenericRepository[entity.Tenant, model.Tenant](model.NewTenantModel)
 
-		tenant, err := tenantRepo.GetOne(ctx, &repository.Condition{})
+		tenant, err := tenantRepo.GetOne(ctx)
 
 		assert.Error(t, err)
 		assert.True(t, errors.As(err, &custom_errors.CustomError{}))
@@ -64,7 +64,7 @@ func TestGetAllWithPagination(t *testing.T) {
 
 	tenant := insertTenant(t, repo, ctx)
 
-	res, count, err := repo.GetAllWithPagination(ctx, nil, repository.Pagination{
+	res, count, err := repo.GetAllWithPagination(ctx, repository.Pagination{
 		Page: 1,
 		Size: 1,
 	})
@@ -93,10 +93,10 @@ func TestGetAll(t *testing.T) {
 
 	tenant := insertTenant(t, repo, ctx)
 
-	res, err := repo.GetAll(ctx, nil)
+	res, err := repo.Where("id = ?", tenant[1].GetID()).GetAll(ctx)
 	assert.NoError(t, err)
 
-	expectedResJson, err := json.Marshal(tenant)
+	expectedResJson, err := json.Marshal([]entity.Tenant{tenant[1]})
 	assert.NoError(t, err)
 
 	resJson, err := json.Marshal(res)

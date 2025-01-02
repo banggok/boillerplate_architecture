@@ -38,41 +38,34 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 
 	counts := make(map[string]*int64)
 	queries := []struct {
-		key       string
-		repo      string
-		condition repository.Condition
+		key   string
+		repo  string
+		query string
+		args  []interface{}
 	}{
 		{
-			key:  "countPhone",
-			repo: "tenant",
-			condition: repository.Condition{
-				Query: "phone = ?",
-				Args:  []interface{}{tenant.GetPhone()},
-			},
+			key:   "countPhone",
+			repo:  "tenant",
+			query: "phone = ?",
+			args:  []interface{}{tenant.GetPhone()},
 		},
 		{
-			key:  "countEmail",
-			repo: "tenant",
-			condition: repository.Condition{
-				Query: "email = ?",
-				Args:  []interface{}{tenant.GetEmail()},
-			},
+			key:   "countEmail",
+			repo:  "tenant",
+			query: "email = ?",
+			args:  []interface{}{tenant.GetEmail()},
 		},
 		{
-			key:  "countAccountPhone",
-			repo: "account",
-			condition: repository.Condition{
-				Query: "phone = ?",
-				Args:  []interface{}{(*tenant.GetAccounts())[0].GetPhone()},
-			},
+			key:   "countAccountPhone",
+			repo:  "account",
+			query: "phone = ?",
+			args:  []interface{}{(*tenant.GetAccounts())[0].GetPhone()},
 		},
 		{
-			key:  "countAccountEmail",
-			repo: "account",
-			condition: repository.Condition{
-				Query: "email = ?",
-				Args:  []interface{}{(*tenant.GetAccounts())[0].GetEmail()},
-			},
+			key:   "countAccountEmail",
+			repo:  "account",
+			query: "email = ?",
+			args:  []interface{}{(*tenant.GetAccounts())[0].GetEmail()},
 		},
 	}
 
@@ -80,7 +73,7 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 		q := query
 		eg.Go(func() error {
 			var err error
-			counts[q.key], err = t.countEntity(ctx, q.repo, q.condition)
+			counts[q.key], err = t.countEntity(ctx, q.repo, q.query, q.args)
 			if err != nil {
 				return custom_errors.New(err, custom_errors.InternalServerError, "failed to count "+q.key)
 			}
@@ -108,12 +101,13 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 func (t *tenantCreateService) countEntity(
 	ctx *gin.Context,
 	repo string,
-	condition repository.Condition,
+	query string,
+	args []interface{},
 ) (*int64, error) {
 	if repo == "tenant" {
-		return t.tenantRepo.Count(ctx, condition)
+		return t.tenantRepo.Where(query, args...).Count(ctx)
 	}
-	return t.accountRepo.Count(ctx, condition)
+	return t.accountRepo.Where(query, args...).Count(ctx)
 }
 
 func NewTenantCreateService(

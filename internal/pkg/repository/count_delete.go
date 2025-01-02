@@ -9,12 +9,12 @@ import (
 )
 
 type countDeleteRepository[E any] interface {
-	Count(ctx *gin.Context, conditions Condition) (*int64, error)
-	Delete(ctx *gin.Context, conditions Condition) error
+	Count(ctx *gin.Context) (*int64, error)
+	Delete(ctx *gin.Context) error
 }
 
 // Count returns the number of rows that match the given condition.
-func (r *genericRepositoryImpl[E, M]) Count(ctx *gin.Context, conditions Condition) (*int64, error) {
+func (r *genericRepositoryImpl[E, M]) Count(ctx *gin.Context) (*int64, error) {
 	// Get database transaction from context
 	tx, err := transaction.GetTransaction(ctx, false)
 	if err != nil {
@@ -23,7 +23,8 @@ func (r *genericRepositoryImpl[E, M]) Count(ctx *gin.Context, conditions Conditi
 
 	// Count the rows matching the condition
 	var count int64
-	if err := tx.Model(new(M)).Where(conditions.Query, conditions.Args...).Count(&count).Error; err != nil {
+	tx = r.getWhere(tx)
+	if err := tx.Model(new(M)).Count(&count).Error; err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to count rows with given condition")
 	}
 
@@ -31,7 +32,7 @@ func (r *genericRepositoryImpl[E, M]) Count(ctx *gin.Context, conditions Conditi
 }
 
 // Delete removes records based on the provided conditions.
-func (r *genericRepositoryImpl[E, M]) Delete(ctx *gin.Context, conditions Condition) error {
+func (r *genericRepositoryImpl[E, M]) Delete(ctx *gin.Context) error {
 	// Get database transaction from context
 	tx, err := transaction.GetTransaction(ctx, true)
 	if err != nil {
@@ -39,7 +40,8 @@ func (r *genericRepositoryImpl[E, M]) Delete(ctx *gin.Context, conditions Condit
 	}
 
 	// Perform the delete operation
-	if err := tx.Where(conditions.Query, conditions.Args...).Delete(new(M)).Error; err != nil {
+	tx = r.getWhere(tx)
+	if err := tx.Delete(new(M)).Error; err != nil {
 		return custom_errors.New(err, custom_errors.InternalServerError, "failed to delete records from database")
 	}
 
