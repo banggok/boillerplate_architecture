@@ -3,6 +3,7 @@ package app
 import (
 	"appointment_management_system/internal/config"
 	"appointment_management_system/internal/config/smtp"
+	"appointment_management_system/internal/config/validator"
 	"fmt"
 	"os"
 	"time"
@@ -69,6 +70,7 @@ func init() {
 func Setup() AppConfig {
 	setupLogging()
 	setTimezone()
+	validator.SetupValidator()
 	environment := getConfigValue("ENVIRONMENT", string(ENV_DEV))
 	return AppConfig{
 		Port:             getConfigValue("HTTP_PORT", "8080"),
