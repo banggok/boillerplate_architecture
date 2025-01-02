@@ -16,7 +16,10 @@ func max_props() {
 			return err
 		}
 		if !info.IsDir() && filepath.Ext(path) == ".go" {
-			failed = checkFile(path)
+			check := checkFile(path)
+			if !failed {
+				failed = check
+			}
 		}
 		return nil
 	})

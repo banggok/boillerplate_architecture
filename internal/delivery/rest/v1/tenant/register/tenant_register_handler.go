@@ -72,10 +72,9 @@ func (h *tenantRegisterHandler) parseAndValidateRequest(c *gin.Context, request 
 			"invalid tenant register request payload"))
 		return err
 	}
-	validator := validator.SetupValidator()
 
 	// Validate the request using the validator
-	if err := validator.Struct(request); err != nil {
+	if err := validator.Validate.Struct(request); err != nil {
 		validationErrors := request.CustomValidationMessages(err)
 		c.Error(custom_errors.New(
 			err,

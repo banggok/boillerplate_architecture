@@ -22,7 +22,7 @@ type tenantCreateService struct {
 }
 
 func (t *tenantCreateService) Create(ctx *gin.Context, tenant *entity.Tenant) error {
-	if tenant == nil || tenant.GetAccounts() == nil {
+	if tenant == nil || (*tenant).GetAccounts() == nil {
 		return custom_errors.New(nil, custom_errors.TenantUnprocessEntity,
 			"tenant and account can not empty when create tenant")
 	}

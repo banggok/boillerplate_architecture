@@ -39,14 +39,14 @@ func NewAccountModel(entity entity.Account) Account {
 		Password:  entity.GetPassword(),
 	}
 	if entity.GetTenant() != nil {
-		tenant := NewTenantModel(*entity.GetTenant())
+		tenant := NewTenantModel(entity.GetTenant())
 		account.Tenant = &tenant
 	}
 	return account
 }
 
-func (m *Account) ToEntity() (*entity.Account, error) {
-	var tenantParam *entity.Tenant
+func (m *Account) ToEntity() (entity.Account, error) {
+	var tenantParam entity.Tenant
 	if m.Tenant != nil {
 		var err error
 		tenantParam, err = m.Tenant.ToEntity()

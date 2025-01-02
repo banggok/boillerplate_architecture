@@ -8,24 +8,33 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Pagination struct {
+	Page int
+	Size int
+}
+
 type retrievalRepository[E any, M any] interface {
-	GetOne(ctx *gin.Context, conditions Condition) (*E, error)
-	GetAll(ctx *gin.Context, conditions Condition) (*[]E, error)
-	GetAllWithPagination(ctx *gin.Context, conditions Condition, page int, pageSize int) (*[]E, int64, error)
+	GetOne(ctx *gin.Context, conditions *Condition) (E, error)
+	GetAll(ctx *gin.Context, conditions *Condition) (*[]E, error)
+	GetAllWithPagination(ctx *gin.Context, conditions *Condition, pagination Pagination) (*[]E, int64, error)
 }
 
 // GetOne retrieves a single entity based on the provided condition.
-func (r *genericRepositoryImpl[E, M]) GetOne(ctx *gin.Context, conditions Condition) (*E, error) {
+func (r *genericRepositoryImpl[E, M]) GetOne(ctx *gin.Context, conditions *Condition) (E, error) {
 	// Get database transaction from context
+	var entity E
 	tx, err := transaction.GetTransaction(ctx, false)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get database transaction: %w", err)
+		return entity, fmt.Errorf("failed to get database transaction: %w", err)
 	}
 
 	// Retrieve the model using the condition
 	var model M
-	if err := tx.Where(conditions.Query, conditions.Args...).First(&model).Error; err != nil {
-		return nil, custom_errors.New(err, r.notFoundError(model), "failed to find model with given condition")
+	if conditions != nil {
+		tx = tx.Where(conditions.Query, conditions.Args...)
+	}
+	if err := tx.First(&model).Error; err != nil {
+		return entity, custom_errors.New(err, r.notFoundError(model), "failed to find model with given condition")
 	}
 
 	// Convert model to entity using the model's ToEntity method
@@ -33,7 +42,7 @@ func (r *genericRepositoryImpl[E, M]) GetOne(ctx *gin.Context, conditions Condit
 }
 
 // GetAll retrieves all entities based on the provided conditions.
-func (r *genericRepositoryImpl[E, M]) GetAll(ctx *gin.Context, conditions Condition) (*[]E, error) {
+func (r *genericRepositoryImpl[E, M]) GetAll(ctx *gin.Context, conditions *Condition) (*[]E, error) {
 	// Get database transaction from context
 	tx, err := transaction.GetTransaction(ctx, false)
 	if err != nil {
@@ -42,7 +51,10 @@ func (r *genericRepositoryImpl[E, M]) GetAll(ctx *gin.Context, conditions Condit
 
 	// Retrieve all models matching the conditions
 	var models []M
-	if err := tx.Where(conditions.Query, conditions.Args...).Find(&models).Error; err != nil {
+	if conditions != nil {
+		tx = tx.Where(conditions.Query, conditions.Args...)
+	}
+	if err := tx.Find(&models).Error; err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to retrieve models from database")
 	}
 
@@ -53,20 +65,20 @@ func (r *genericRepositoryImpl[E, M]) GetAll(ctx *gin.Context, conditions Condit
 		if err != nil {
 			return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert model to entity")
 		}
-		entities = append(entities, *entity)
+		entities = append(entities, entity)
 	}
 
 	return &entities, nil
 }
 
 // GetAllWithPagination retrieves all entities with pagination support.
-func (r *genericRepositoryImpl[E, M]) GetAllWithPagination(ctx *gin.Context, conditions Condition, page int, pageSize int) (*[]E, int64, error) {
+func (r *genericRepositoryImpl[E, M]) GetAllWithPagination(ctx *gin.Context, conditions *Condition, pagination Pagination) (*[]E, int64, error) {
 	// Validate pagination parameters
-	if page <= 0 {
-		page = 1
+	if pagination.Page <= 0 {
+		pagination.Page = 1
 	}
-	if pageSize <= 0 {
-		pageSize = 10 // Default page size
+	if pagination.Size <= 0 {
+		pagination.Size = 10 // Default page size
 	}
 
 	// Get database transaction from context
@@ -77,14 +89,17 @@ func (r *genericRepositoryImpl[E, M]) GetAllWithPagination(ctx *gin.Context, con
 
 	// Retrieve the total count for the given conditions
 	var total int64
-	if err := tx.Model(new(M)).Where(conditions.Query, conditions.Args...).Count(&total).Error; err != nil {
+	if conditions != nil {
+		tx = tx.Where(conditions.Query, conditions.Args...)
+	}
+	if err := tx.Model(new(M)).Count(&total).Error; err != nil {
 		return nil, 0, custom_errors.New(err, custom_errors.InternalServerError, "failed to count rows with given conditions")
 	}
 
 	// Retrieve the models with pagination
 	var models []M
-	offset := (page - 1) * pageSize
-	if err := tx.Where(conditions.Query, conditions.Args...).Limit(pageSize).Offset(offset).Find(&models).Error; err != nil {
+	offset := (pagination.Page - 1) * pagination.Size
+	if err := tx.Limit(pagination.Size).Offset(offset).Find(&models).Error; err != nil {
 		return nil, 0, custom_errors.New(err, custom_errors.InternalServerError, "failed to retrieve models from database")
 	}
 
@@ -95,7 +110,7 @@ func (r *genericRepositoryImpl[E, M]) GetAllWithPagination(ctx *gin.Context, con
 		if err != nil {
 			return nil, 0, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert model to entity")
 		}
-		entities = append(entities, *entity)
+		entities = append(entities, entity)
 	}
 
 	return &entities, total, nil

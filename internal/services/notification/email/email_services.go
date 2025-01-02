@@ -19,19 +19,35 @@ type Service interface {
 	SendWelcomeEmail(to string, data WelcomeData) error
 }
 
+type EmailSender interface {
+	Send(message *gomail.Message) error
+}
+
+type gomailSender struct {
+	dialer *gomail.Dialer
+}
+
+func (s *gomailSender) Send(message *gomail.Message) error {
+	return s.dialer.DialAndSend(message)
+}
+
 type serviceImpl struct {
 	smtpHost    string
 	smtpPort    int
 	senderEmail string
-	appPassword string
+	emailSender EmailSender
 }
 
-func NewService(cfg smtp.Config) Service {
+func NewService(cfg smtp.Config, sender EmailSender) Service {
+	if sender == nil {
+		dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SenderEmail, cfg.AppPassword)
+		sender = &gomailSender{dialer: dialer}
+	}
 	return &serviceImpl{
 		smtpHost:    cfg.SmtpHost,
 		smtpPort:    cfg.SmtpPort,
 		senderEmail: cfg.SenderEmail,
-		appPassword: cfg.AppPassword,
+		emailSender: sender,
 	}
 }
 
@@ -58,7 +74,7 @@ func (s *serviceImpl) SendWelcomeEmail(to string, data WelcomeData) error {
 		return err
 	}
 
-	// Send the email using SMTP
+	// Prepare the email message
 	message := gomail.NewMessage()
 	message.SetHeader("From", s.senderEmail)
 	message.SetHeader("To", to)
@@ -66,9 +82,8 @@ func (s *serviceImpl) SendWelcomeEmail(to string, data WelcomeData) error {
 	message.SetBody("text/html", body.String())
 	message.SetHeader("Reply-To", "do-not-reply-ams@gmail.com") // Masked reply-to email
 
-	dialer := gomail.NewDialer(s.smtpHost, s.smtpPort, s.senderEmail, s.appPassword)
-
-	if err := dialer.DialAndSend(message); err != nil {
+	// Use the email sender to send the email
+	if err := s.emailSender.Send(message); err != nil {
 		log.Printf("Failed to send email: %v", err)
 		return err
 	}

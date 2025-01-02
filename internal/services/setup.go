@@ -33,7 +33,7 @@ func Setup(cfg app.AppConfig) Config {
 	tenantRepo := repository.NewGenericRepository[entity.Tenant, model.Tenant](model.NewTenantModel)
 	accountRepo := repository.NewGenericRepository[entity.Account, model.Account](model.NewAccountModel)
 
-	email := email.NewService(cfg.SMTP)
+	email := email.NewService(cfg.SMTP, nil)
 	tenant := tenant.NewTenantCreateService(tenantRepo, accountRepo)
 	return &servicesImplt{
 		email:  email,

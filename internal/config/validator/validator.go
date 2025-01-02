@@ -8,8 +8,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
+var Validate *validator.Validate
+
 // SetupValidator initializes the validator and registers custom rules.
-func SetupValidator() *validator.Validate {
+func SetupValidator() {
 	validate := validator.New()
 
 	// Register custom validation rules
@@ -40,5 +42,5 @@ func SetupValidator() *validator.Validate {
 		log.Fatalf("Failed to register alpha_space validation: %v", err)
 	}
 
-	return validate
+	Validate = validate
 }

@@ -51,7 +51,7 @@ func NewTenantModel(entity entity.Tenant) Tenant {
 	return tenant
 }
 
-func (m *Tenant) ToEntity() (*entity.Tenant, error) {
+func (m *Tenant) ToEntity() (entity.Tenant, error) {
 	var accountParam *[]entity.Account
 	if m.Accounts != nil {
 		accountEntities := make([]entity.Account, 0)
@@ -60,7 +60,7 @@ func (m *Tenant) ToEntity() (*entity.Tenant, error) {
 			if err != nil {
 				return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert account model to entity")
 			}
-			accountEntities = append(accountEntities, *accountEntity)
+			accountEntities = append(accountEntities, accountEntity)
 		}
 		accountParam = &accountEntities
 	}

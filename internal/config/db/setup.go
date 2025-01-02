@@ -27,7 +27,7 @@ var dialector map[app.SupportedDriver]func(string) gorm.Dialector = map[app.Supp
 var logLevel map[app.Environment]logger.LogLevel = map[app.Environment]logger.LogLevel{
 	app.ENV_DEV:     logger.Info,
 	app.ENV_PROD:    logger.Silent,
-	app.ENV_TESTING: logger.Silent,
+	app.ENV_TESTING: logger.Info,
 }
 
 func Setup(appCfg app.AppConfig) (*DBConnection, func(*DBConnection), error) {

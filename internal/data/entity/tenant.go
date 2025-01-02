@@ -1,10 +1,23 @@
 package entity
 
 import (
+	"appointment_management_system/internal/config/validator"
 	"appointment_management_system/internal/pkg/custom_errors"
 )
 
-type Tenant struct {
+type Tenant interface {
+	Entity
+	GetName() string
+	GetAddress() string
+	GetEmail() string
+	GetAccounts() *[]Account
+	GetPhone() string
+	GetTimezone() string
+	GetOpeningHours() string
+	GetClosingHours() string
+}
+
+type tenantImpl struct {
 	entity
 	name         string `validate:"required"`              // Tenant's name (required, no strict restrictions)
 	address      string `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
@@ -59,20 +72,20 @@ type makeTenantParams struct {
 	accounts *[]Account
 }
 
-func NewTenant(tenantIdentity tenantIdentity, tenantStoreInfo tenantStoreInfo, accounts *[]Account) (*Tenant, error) {
+func NewTenant(tenantIdentity tenantIdentity, tenantStoreInfo tenantStoreInfo, accounts *[]Account) (Tenant, error) {
 	params := newTenantParams{
 		tenantIdentity:  tenantIdentity,
 		tenantStoreInfo: tenantStoreInfo,
 		accounts:        accounts,
 	}
-	if err := validate.Struct(params); err != nil {
+	if err := validator.Validate.Struct(params); err != nil {
 		return nil, custom_errors.New(
 			err,
 			custom_errors.TenantUnprocessEntity,
 			"failed to validate new tenant entity")
 	}
 
-	return &Tenant{
+	return &tenantImpl{
 		name:         params.name,
 		address:      params.address,
 		email:        params.email,
@@ -87,7 +100,7 @@ func NewTenant(tenantIdentity tenantIdentity, tenantStoreInfo tenantStoreInfo, a
 func MakeTenant(metadata metadata,
 	tenantIdentity tenantIdentity,
 	tenantStoreInfo tenantStoreInfo,
-	accounts *[]Account) (*Tenant, error) {
+	accounts *[]Account) (Tenant, error) {
 	params := makeTenantParams{
 		metadata:        metadata,
 		tenantIdentity:  tenantIdentity,
@@ -95,14 +108,14 @@ func MakeTenant(metadata metadata,
 		accounts:        accounts,
 	}
 	// Validate the input parameters
-	if err := validate.Struct(params); err != nil {
+	if err := validator.Validate.Struct(params); err != nil {
 		return nil, custom_errors.New(
 			err,
 			custom_errors.TenantUnprocessEntity,
 			"failed to validate make tenant")
 	}
 
-	return &Tenant{
+	return &tenantImpl{
 		entity: entity{
 			id:        params.id,
 			createdAt: params.createdAt,
@@ -120,40 +133,40 @@ func MakeTenant(metadata metadata,
 }
 
 // Getter and Setter for Name
-func (t *Tenant) GetName() string {
+func (t *tenantImpl) GetName() string {
 	return t.name
 }
 
 // Getter and Setter for Address
-func (t *Tenant) GetAddress() string {
+func (t *tenantImpl) GetAddress() string {
 	return t.address
 }
 
 // Getter and Setter for Email
-func (t *Tenant) GetEmail() string {
+func (t *tenantImpl) GetEmail() string {
 	return t.email
 }
 
 // Getter and Setter for Phone
-func (t *Tenant) GetPhone() string {
+func (t *tenantImpl) GetPhone() string {
 	return t.phone
 }
 
 // Getter and Setter for Timezone
-func (t *Tenant) GetTimezone() string {
+func (t *tenantImpl) GetTimezone() string {
 	return t.timezone
 }
 
 // Getter and Setter for OpeningHours
-func (t *Tenant) GetOpeningHours() string {
+func (t *tenantImpl) GetOpeningHours() string {
 	return t.openingHours
 }
 
 // Getter and Setter for ClosingHours
-func (t *Tenant) GetClosingHours() string {
+func (t *tenantImpl) GetClosingHours() string {
 	return t.closingHours
 }
 
-func (t *Tenant) GetAccounts() *[]Account {
+func (t *tenantImpl) GetAccounts() *[]Account {
 	return t.accounts
 }

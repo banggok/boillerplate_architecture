@@ -21,15 +21,16 @@ type genericRepositoryImpl[E any, M any] struct {
 	toModel func(entity E) M
 }
 
-func (r *genericRepositoryImpl[E, M]) toEntity(model M) (*E, error) {
-	if toEntityMethod, ok := any(&model).(interface{ ToEntity() (*E, error) }); ok {
+func (r *genericRepositoryImpl[E, M]) toEntity(model M) (E, error) {
+	var entity E
+	if toEntityMethod, ok := any(&model).(interface{ ToEntity() (E, error) }); ok {
 		entity, err := toEntityMethod.ToEntity()
 		if err != nil {
-			return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert model to entity")
+			return entity, custom_errors.New(err, custom_errors.InternalServerError, "failed to convert model to entity")
 		}
 		return entity, nil
 	}
-	return nil, custom_errors.New(nil, custom_errors.InternalServerError, "model does not implement ToEntity method")
+	return entity, custom_errors.New(nil, custom_errors.InternalServerError, "model does not implement ToEntity method")
 }
 
 func (r *genericRepositoryImpl[E, M]) notFoundError(model M) custom_errors.ErrorCode {

@@ -13,7 +13,7 @@ import (
 
 // TenantRegisterUsecase defines the interface for registering a tenant
 type TenantRegisterUsecase interface {
-	Execute(ctx *gin.Context, request RegisterTenantRequest) (*entity.Tenant, error)
+	Execute(ctx *gin.Context, request RegisterTenantRequest) (entity.Tenant, error)
 }
 
 type tenantRegisterUsecase struct {
@@ -22,7 +22,7 @@ type tenantRegisterUsecase struct {
 }
 
 // Execute implements TenantRegisterUsecase.
-func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenantRequest) (*entity.Tenant, error) {
+func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenantRequest) (entity.Tenant, error) {
 
 	account, plainPassword, err := entity.NewAccount(
 		entity.NewAccountIdentity(request.Account.Name, request.Account.Email, request.Account.Phone),
@@ -37,7 +37,7 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 	tenant, err := entity.NewTenant(
 		entity.NewTenantIdentity(request.Name, request.Email, request.Phone),
 		entity.NewTenantStoreInfo(request.Address, request.Timezone, request.OpeningHours, request.ClosingHours),
-		&[]entity.Account{*account})
+		&[]entity.Account{account})
 
 	if err != nil {
 		return nil, custom_errors.New(
@@ -46,7 +46,7 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 			"failed to validate new tenant entity")
 	}
 
-	if err := t.createTenantService.Create(ctx, tenant); err != nil {
+	if err := t.createTenantService.Create(ctx, &tenant); err != nil {
 		return nil, custom_errors.New(
 			err,
 			custom_errors.InternalServerError,

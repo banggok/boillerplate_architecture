@@ -37,7 +37,7 @@ func TestTenantRegister(t *testing.T) {
 	}
 
 	t.Run("Tenant Registration Success", func(t *testing.T) {
-		server, cleanUp, mysqlCfg := setup.TestingEnv(t)
+		server, cleanUp, mysqlCfg := setup.TestingEnv(t, true)
 		defer cleanUp(mysqlCfg)
 
 		resp := test_register.CallPostTenants(t, reqBody, server)
@@ -119,7 +119,7 @@ func TestTenantRegister(t *testing.T) {
 		for i := range *expectedTenantDB.Accounts {
 			accountDb := (*tenantDB.Accounts)[i]
 			err = time_testing_helper.Sanitize(&accountDb.CreatedAt,
-				expectedTenantDB.UpdatedAt)
+				expectedTenantDB.CreatedAt)
 			require.NoError(t, err)
 
 			err = time_testing_helper.Sanitize(&accountDb.UpdatedAt,
@@ -139,7 +139,7 @@ func TestTenantRegister(t *testing.T) {
 	})
 
 	t.Run("tenant registration should be failed due to duplication", func(t *testing.T) {
-		server, cleanUp, mysqlCfg := setup.TestingEnv(t)
+		server, cleanUp, mysqlCfg := setup.TestingEnv(t, true)
 		defer cleanUp(mysqlCfg)
 
 		resp := test_register.CallPostTenants(t, reqBody, server)
@@ -176,7 +176,7 @@ func TestTenantRegister(t *testing.T) {
 	})
 
 	t.Run("Tenant Registration Bad Request (Invalid JSON)", func(t *testing.T) {
-		server, cleanUp, mysqlCfg := setup.TestingEnv(t)
+		server, cleanUp, mysqlCfg := setup.TestingEnv(t, true)
 		defer cleanUp(mysqlCfg)
 
 		// Invalid JSON payload
@@ -213,7 +213,7 @@ func TestTenantRegister(t *testing.T) {
 
 	// New Test Case: Validation Error (422 Unprocessable Entity)
 	t.Run("Tenant Registration Unprocessable Entity (Validation Error)", func(t *testing.T) {
-		server, cleanUp, mysqlCfg := setup.TestingEnv(t)
+		server, cleanUp, mysqlCfg := setup.TestingEnv(t, true)
 		defer cleanUp(mysqlCfg)
 
 		reqBody.Name = ""

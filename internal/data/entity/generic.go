@@ -2,6 +2,11 @@ package entity
 
 import "time"
 
+type Entity interface {
+	GetID() uint
+	GetCreatedAt() time.Time
+	GetUpdatedAt() time.Time
+}
 type entity struct {
 	id        uint      // id from database
 	createdAt time.Time // timestamp from database

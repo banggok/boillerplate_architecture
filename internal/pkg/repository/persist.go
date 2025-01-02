@@ -24,8 +24,10 @@ func (r *genericRepositoryImpl[E, M]) Persist(ctx *gin.Context, entity *E) error
 		return fmt.Errorf("failed to get database transaction: %w", err)
 	}
 
+	fmt.Printf("insert: %v\n", model)
 	// Save model to database
 	if err := tx.Session(&gorm.Session{FullSaveAssociations: true}).Save(&model).Error; err != nil {
+		fmt.Printf("error_persist: %v\n", err)
 		return custom_errors.New(err, custom_errors.InternalServerError, "failed to save model to database")
 	}
 
@@ -36,7 +38,7 @@ func (r *genericRepositoryImpl[E, M]) Persist(ctx *gin.Context, entity *E) error
 		return custom_errors.New(err, custom_errors.InternalServerError, "failed to convert model to entity")
 	}
 
-	*entity = *updatedEntity
+	*entity = updatedEntity
 
 	return nil
 }

@@ -4,9 +4,15 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
+
+type lowCover struct {
+	Path     string
+	Coverage float64
+}
 
 func enforce_coverage() {
 	file, err := os.Open("coverage.txt")
@@ -17,7 +23,7 @@ func enforce_coverage() {
 	defer file.Close()
 
 	var totalCoverage float64
-	var lowCoverageFunctions []string
+	var lowCoverageFunctions []lowCover
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -51,25 +57,36 @@ func enforce_coverage() {
 		}
 
 		if coverage < minCoverage {
-			lowCoverageFunctions = append(lowCoverageFunctions, fmt.Sprintf("%s %s (%.2f%%)", path, functionName, coverage))
+			lowCoverageFunctions = append(lowCoverageFunctions, lowCover{
+				Path:     fmt.Sprintf("%s %s (%.2f%%)", path, functionName, coverage),
+				Coverage: coverage,
+			})
 		}
 	}
 
 	if len(lowCoverageFunctions) > 0 {
+		sortLowCoverageAsc(lowCoverageFunctions)
 		fmt.Println("Functions with low coverage:")
 		for _, fn := range lowCoverageFunctions {
 			// Remove module name
-			parts := strings.SplitN(fn, "/", 2)
+			parts := strings.SplitN(fn.Path, "/", 2)
 			if len(parts) > 1 {
-				fn = parts[1]
+				fn.Path = parts[1]
 			}
-			fmt.Println(" -", fn)
+			fmt.Println(" -", fn.Path)
 		}
 	}
 
 	if totalCoverage < minCoverage {
 		fmt.Printf("Test coverage is %.2f%%, which is below the required %.2f%%\n", totalCoverage, minCoverage)
+		os.Exit(1)
 	} else {
 		fmt.Printf("Test coverage is %.2f%%, which meets the required %.2f%%\n", totalCoverage, minCoverage)
 	}
+}
+
+func sortLowCoverageAsc(lowCoverageFunctions []lowCover) {
+	sort.Slice(lowCoverageFunctions, func(i, j int) bool {
+		return lowCoverageFunctions[i].Coverage < lowCoverageFunctions[j].Coverage
+	})
 }
