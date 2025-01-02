@@ -19,19 +19,19 @@ import (
 )
 
 func main() {
-	appConfig := app.Setup()
+	app.Setup()
 
-	mysqlCfg, cleanUp, err := db.Setup(appConfig)
+	mysqlCfg, cleanUp, err := db.Setup(app.AppConfig)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer cleanUp(mysqlCfg)
 
-	server := server.Setup(appConfig, mysqlCfg)
-	runServer(server, appConfig)
+	server := server.Setup(app.AppConfig, mysqlCfg)
+	runServer(server, app.AppConfig)
 }
 
-func runServer(router *gin.Engine, cfg app.AppConfig) {
+func runServer(router *gin.Engine, cfg app.Config) {
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%s", cfg.Port),
 		Handler: router,

@@ -19,7 +19,8 @@ func TestingEnv(t *testing.T, useServer bool) (serverEngine *gin.Engine, cleanUp
 	dsn := fmt.Sprintf("file:test_%d?cache=shared&mode=memory", uniqueID)
 
 	// Configure the application to use this DSN
-	appConfig := app.Setup()
+	app.Setup()
+	appConfig := app.AppConfig
 	appConfig.DBConfig.MasterDSN = dsn
 	appConfig.DBConfig.SlaveDSN = dsn
 	appConfig.DBConfig.Driver = app.SQLiteDriver

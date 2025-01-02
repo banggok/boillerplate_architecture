@@ -12,6 +12,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var AppConfig Config
+
 var getConfigValue = config.GetConfigValue
 var getConfigValueAsInt = config.GetConfigValueAsInt
 
@@ -23,7 +25,7 @@ const (
 	ENV_TESTING Environment = "testing"
 )
 
-type AppConfig struct {
+type Config struct {
 	Port             string
 	CORSAllowOrigins string
 	RateLimit        int
@@ -67,12 +69,12 @@ func init() {
 	}
 }
 
-func Setup() AppConfig {
+func Setup() {
 	setupLogging()
 	setTimezone()
-	validator.SetupValidator()
+	validator.Setup()
 	environment := getConfigValue("ENVIRONMENT", string(ENV_DEV))
-	return AppConfig{
+	AppConfig = Config{
 		Port:             getConfigValue("HTTP_PORT", "8080"),
 		CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "*"),
 		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 100),

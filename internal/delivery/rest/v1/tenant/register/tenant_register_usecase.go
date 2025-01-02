@@ -54,7 +54,7 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 	}
 
 	go func() {
-		cfg := app.Setup()
+		cfg := app.AppConfig
 		if cfg.Environment != app.ENV_PROD {
 			return
 		}

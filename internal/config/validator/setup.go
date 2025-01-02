@@ -10,8 +10,8 @@ import (
 
 var Validate *validator.Validate
 
-// SetupValidator initializes the validator and registers custom rules.
-func SetupValidator() {
+// Setup initializes the validator and registers custom rules.
+func Setup() {
 	validate := validator.New()
 
 	// Register custom validation rules

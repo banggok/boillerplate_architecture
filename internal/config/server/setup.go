@@ -21,7 +21,7 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
-func Setup(appCfg app.AppConfig, mysqlCfg *db.DBConnection) *gin.Engine {
+func Setup(appCfg app.Config, mysqlCfg *db.DBConnection) *gin.Engine {
 	if appCfg.Environment == app.ENV_PROD {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -34,7 +34,7 @@ func Setup(appCfg app.AppConfig, mysqlCfg *db.DBConnection) *gin.Engine {
 	return server
 }
 
-func setupRoutes(server *gin.Engine, cfg app.AppConfig) {
+func setupRoutes(server *gin.Engine, cfg app.Config) {
 	// Health route
 	server.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
@@ -43,7 +43,7 @@ func setupRoutes(server *gin.Engine, cfg app.AppConfig) {
 	rest.RegisterRoutes(server, serviceCfg)
 }
 
-func setupMiddleware(router *gin.Engine, appCfg app.AppConfig, db *db.DBConnection) {
+func setupMiddleware(router *gin.Engine, appCfg app.Config, db *db.DBConnection) {
 	router.Use(requestid.New())
 	router.Use(cors.New(cors.Config{
 		AllowOrigins: []string{appCfg.CORSAllowOrigins},

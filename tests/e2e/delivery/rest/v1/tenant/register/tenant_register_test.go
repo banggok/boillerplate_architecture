@@ -119,11 +119,11 @@ func TestTenantRegister(t *testing.T) {
 		for i := range *expectedTenantDB.Accounts {
 			accountDb := (*tenantDB.Accounts)[i]
 			err = time_testing_helper.Sanitize(&accountDb.CreatedAt,
-				expectedTenantDB.CreatedAt)
+				(*expectedTenantDB.Accounts)[i].CreatedAt)
 			require.NoError(t, err)
 
 			err = time_testing_helper.Sanitize(&accountDb.UpdatedAt,
-				expectedTenantDB.UpdatedAt)
+				(*expectedTenantDB.Accounts)[i].UpdatedAt)
 			require.NoError(t, err)
 			(*tenantDB.Accounts)[i] = accountDb
 		}

@@ -30,7 +30,7 @@ var logLevel map[app.Environment]logger.LogLevel = map[app.Environment]logger.Lo
 	app.ENV_TESTING: logger.Info,
 }
 
-func Setup(appCfg app.AppConfig) (*DBConnection, func(*DBConnection), error) {
+func Setup(appCfg app.Config) (*DBConnection, func(*DBConnection), error) {
 	// Connect to the master database
 	dbCfg := appCfg.DBConfig
 	dbLogger := logger.New(

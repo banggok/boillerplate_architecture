@@ -29,7 +29,7 @@ func (s *servicesImplt) Tenant() tenant.Service {
 	return s.tenant
 }
 
-func Setup(cfg app.AppConfig) Config {
+func Setup(cfg app.Config) Config {
 	tenantRepo := repository.NewGenericRepository[entity.Tenant, model.Tenant](model.NewTenantModel)
 	accountRepo := repository.NewGenericRepository[entity.Account, model.Account](model.NewAccountModel)
 
