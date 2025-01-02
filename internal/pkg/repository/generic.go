@@ -1,8 +1,6 @@
 package repository
 
-import (
-	"appointment_management_system/internal/pkg/custom_errors"
-)
+import "github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 
 type Condition struct {
 	Query string

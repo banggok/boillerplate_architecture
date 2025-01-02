@@ -1,10 +1,10 @@
 package email_test
 
 import (
-	"appointment_management_system/internal/config/smtp"
-	"appointment_management_system/internal/services/notification/email"
 	"testing"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/smtp"
+	"github.com/banggok/boillerplate_architecture/internal/services/notification/email"
 	"github.com/stretchr/testify/assert"
 	gomail "gopkg.in/gomail.v2"
 )

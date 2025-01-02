@@ -1,13 +1,13 @@
 package test_register
 
 import (
-	"appointment_management_system/internal/delivery/rest/v1/tenant/register"
 	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/tenant/register"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )

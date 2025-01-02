@@ -1,9 +1,10 @@
 package entity
 
 import (
-	"appointment_management_system/internal/config/validator"
-	"appointment_management_system/internal/pkg/custom_errors"
-	"appointment_management_system/internal/pkg/password"
+	"github.com/banggok/boillerplate_architecture/internal/config/validator"
+
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/password"
 )
 
 type Account interface {

@@ -1,10 +1,10 @@
 package recovery
 
 import (
-	"appointment_management_system/internal/pkg/custom_errors"
 	"fmt"
 	"net/http"
 
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"

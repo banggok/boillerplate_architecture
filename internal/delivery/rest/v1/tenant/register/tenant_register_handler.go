@@ -1,10 +1,10 @@
 package register
 
 import (
-	"appointment_management_system/internal/config/validator"
-	"appointment_management_system/internal/pkg/custom_errors"
 	"net/http"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/validator"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/gin-gonic/gin"
 )
 

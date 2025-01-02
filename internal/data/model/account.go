@@ -1,9 +1,10 @@
 package model
 
 import (
-	"appointment_management_system/internal/data/entity"
-	"appointment_management_system/internal/pkg/custom_errors"
 	"time"
+
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 )
 
 // Account struct for the accounts table

@@ -1,6 +1,6 @@
 package smtp
 
-import "appointment_management_system/internal/config"
+import "github.com/banggok/boillerplate_architecture/internal/config"
 
 type Config struct {
 	SmtpHost    string

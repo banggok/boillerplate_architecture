@@ -1,9 +1,8 @@
 package tenant
 
 import (
-	"appointment_management_system/internal/delivery/rest/v1/tenant/register"
-	"appointment_management_system/internal/services"
-
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/tenant/register"
+	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-gonic/gin"
 )
 

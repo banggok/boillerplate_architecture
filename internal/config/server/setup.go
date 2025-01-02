@@ -1,20 +1,20 @@
 package server
 
 import (
-	"appointment_management_system/internal/config/app"
-	"appointment_management_system/internal/config/db"
-	"appointment_management_system/internal/delivery/rest"
-	"appointment_management_system/internal/pkg/middleware/recovery"
-	"appointment_management_system/internal/pkg/middleware/transaction"
-	"appointment_management_system/internal/services"
 	"net/http"
 	"time"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
+	"github.com/banggok/boillerplate_architecture/internal/config/db"
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/recovery"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/transaction"
+	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 
-	log_middleware "appointment_management_system/internal/pkg/middleware/log"
+	log_middleware "github.com/banggok/boillerplate_architecture/internal/pkg/middleware/log"
 
 	"github.com/ulule/limiter/v3"
 	ginmiddleware "github.com/ulule/limiter/v3/drivers/middleware/gin"

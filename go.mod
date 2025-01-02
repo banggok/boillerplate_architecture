@@ -1,4 +1,4 @@
-module appointment_management_system
+module github.com/banggok/boillerplate_architecture
 
 go 1.22.8
 

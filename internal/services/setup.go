@@ -1,12 +1,12 @@
 package services
 
 import (
-	"appointment_management_system/internal/config/app"
-	"appointment_management_system/internal/data/entity"
-	"appointment_management_system/internal/data/model"
-	"appointment_management_system/internal/pkg/repository"
-	"appointment_management_system/internal/services/notification/email"
-	"appointment_management_system/internal/services/tenant"
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	"github.com/banggok/boillerplate_architecture/internal/data/model"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
+	"github.com/banggok/boillerplate_architecture/internal/services/notification/email"
+	"github.com/banggok/boillerplate_architecture/internal/services/tenant"
 )
 
 type Config interface {

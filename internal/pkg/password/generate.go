@@ -1,9 +1,10 @@
 package password
 
 import (
-	"appointment_management_system/internal/pkg/custom_errors"
 	"crypto/rand"
 	"math/big"
+
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 )
 
 const passwordCharset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"

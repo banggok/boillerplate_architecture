@@ -4,9 +4,6 @@
 package main
 
 import (
-	"appointment_management_system/internal/config/app"
-	"appointment_management_system/internal/config/db"
-	"appointment_management_system/internal/config/server"
 	"context"
 	"fmt"
 	"net/http"
@@ -14,6 +11,9 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
+	"github.com/banggok/boillerplate_architecture/internal/config/db"
+	"github.com/banggok/boillerplate_architecture/internal/config/server"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )

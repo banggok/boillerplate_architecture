@@ -1,14 +1,14 @@
 package setup
 
 import (
-	"appointment_management_system/internal/config/app"
-	"appointment_management_system/internal/config/db"
-	"appointment_management_system/internal/config/server"
-	"appointment_management_system/internal/data/model"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
+	"github.com/banggok/boillerplate_architecture/internal/config/db"
+	"github.com/banggok/boillerplate_architecture/internal/config/server"
+	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )

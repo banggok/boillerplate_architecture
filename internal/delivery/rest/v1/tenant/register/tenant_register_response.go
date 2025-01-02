@@ -1,8 +1,9 @@
 package register
 
 import (
-	"appointment_management_system/internal/data/entity"
 	"time"
+
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 )
 
 // RegisterTenantResponse represents the response payload for tenant registration.

@@ -1,15 +1,15 @@
 package repository_test
 
 import (
-	"appointment_management_system/internal/data/entity"
-	"appointment_management_system/internal/data/model"
-	"appointment_management_system/internal/pkg/custom_errors"
-	"appointment_management_system/internal/pkg/repository"
-	"appointment_management_system/tests/e2e/helper/setup"
 	"encoding/json"
 	"errors"
 	"testing"
 
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	"github.com/banggok/boillerplate_architecture/internal/data/model"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
+	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/setup"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )

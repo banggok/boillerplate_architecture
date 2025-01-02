@@ -1,10 +1,10 @@
 package repository_test
 
 import (
-	"appointment_management_system/internal/pkg/middleware/transaction"
-	"appointment_management_system/internal/pkg/repository"
 	"time"
 
+	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/transaction"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gin-gonic/gin"

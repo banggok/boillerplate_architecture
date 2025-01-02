@@ -1,8 +1,7 @@
 package register
 
 import (
-	"appointment_management_system/internal/services"
-
+	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-gonic/gin"
 )
 

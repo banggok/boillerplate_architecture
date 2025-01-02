@@ -1,20 +1,21 @@
 package register
 
 import (
-	"appointment_management_system/internal/data/model"
-	"appointment_management_system/internal/delivery/rest/v1/tenant/register"
-	"appointment_management_system/internal/pkg/custom_errors"
-	"appointment_management_system/internal/services/tenant"
-	test_register "appointment_management_system/tests/e2e/helper/request/tenant/register"
-	"appointment_management_system/tests/e2e/helper/response"
-	"appointment_management_system/tests/e2e/helper/setup"
-	time_testing_helper "appointment_management_system/tests/e2e/helper/time"
 	"encoding/json"
 	"io"
 	"net/http"
 	"testing"
 	"time"
 
+	test_register "github.com/banggok/boillerplate_architecture/tests/e2e/helper/request/tenant/register"
+	time_testing_helper "github.com/banggok/boillerplate_architecture/tests/e2e/helper/time"
+
+	"github.com/banggok/boillerplate_architecture/internal/data/model"
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/tenant/register"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/banggok/boillerplate_architecture/internal/services/tenant"
+	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/response"
+	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"

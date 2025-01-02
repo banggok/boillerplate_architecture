@@ -1,11 +1,10 @@
 package tenant
 
 import (
-	"appointment_management_system/internal/data/entity"
-	"appointment_management_system/internal/data/model"
-	"appointment_management_system/internal/pkg/custom_errors"
-	"appointment_management_system/internal/pkg/repository"
-
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	"github.com/banggok/boillerplate_architecture/internal/data/model"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
 	"github.com/gin-gonic/gin"
 	"golang.org/x/sync/errgroup"
 )

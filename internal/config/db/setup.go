@@ -1,11 +1,11 @@
 package db
 
 import (
-	"appointment_management_system/internal/config/app"
 	"database/sql"
 	"fmt"
 	"time"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	log "github.com/sirupsen/logrus"
 
 	"gorm.io/driver/mysql"

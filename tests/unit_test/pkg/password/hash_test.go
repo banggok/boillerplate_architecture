@@ -1,8 +1,9 @@
 package password_test
 
 import (
-	"appointment_management_system/internal/pkg/password"
 	"testing"
+
+	"github.com/banggok/boillerplate_architecture/internal/pkg/password"
 )
 
 func TestVerifyPassword(t *testing.T) {

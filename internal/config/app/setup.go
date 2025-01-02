@@ -1,13 +1,13 @@
 package app
 
 import (
-	"appointment_management_system/internal/config"
-	"appointment_management_system/internal/config/smtp"
-	"appointment_management_system/internal/config/validator"
 	"fmt"
 	"os"
 	"time"
 
+	"github.com/banggok/boillerplate_architecture/internal/config"
+	"github.com/banggok/boillerplate_architecture/internal/config/smtp"
+	"github.com/banggok/boillerplate_architecture/internal/config/validator"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
 )

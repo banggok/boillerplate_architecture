@@ -1,9 +1,8 @@
 package password
 
 import (
-	"appointment_management_system/internal/pkg/custom_errors"
-
 	"github.com/alexedwards/argon2id"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 )
 
 // HashPassword hashes a plain-text password using Argon2id

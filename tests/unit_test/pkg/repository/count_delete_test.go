@@ -1,9 +1,9 @@
 package repository_test
 
 import (
-	"appointment_management_system/internal/pkg/repository"
 	"testing"
 
+	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
 	"github.com/stretchr/testify/assert"
 )
 

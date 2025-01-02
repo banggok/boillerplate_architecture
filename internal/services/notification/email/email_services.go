@@ -1,12 +1,12 @@
 package email
 
 import (
-	"appointment_management_system/internal/config/smtp"
 	"bytes"
 	"embed"
 	"html/template"
 	"log"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/smtp"
 	"gopkg.in/gomail.v2"
 )
 

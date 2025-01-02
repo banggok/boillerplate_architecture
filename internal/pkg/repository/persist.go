@@ -1,10 +1,10 @@
 package repository
 
 import (
-	"appointment_management_system/internal/pkg/custom_errors"
-	"appointment_management_system/internal/pkg/middleware/transaction"
 	"fmt"
 
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/transaction"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
