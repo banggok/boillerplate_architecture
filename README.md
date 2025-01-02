@@ -110,7 +110,7 @@ The repository includes a custom code review mechanism to validate adherence to 
 
 1. **Create a new migration file to `migrations/`**:
    ```bash
-   make create-migration [your_migration_name]
+   make create-migration NAME=[your_migration_name]
    ```
 2. **Run all pending migrations**:
    ```bash
