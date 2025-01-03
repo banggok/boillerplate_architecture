@@ -20,27 +20,28 @@ func TestingEnv(t *testing.T, useServer bool) (serverEngine *gin.Engine, cleanUp
 
 	// Configure the application to use this DSN
 	app.Setup()
-	appConfig := app.AppConfig
-	appConfig.DBConfig.MasterDSN = dsn
-	appConfig.DBConfig.SlaveDSN = dsn
-	appConfig.DBConfig.Driver = app.SQLiteDriver
-	appConfig.DBConfig.PoolConfig.Master.MaxIdleConns = 1
-	appConfig.DBConfig.PoolConfig.Master.MaxOpenConns = 1
-	appConfig.DBConfig.PoolConfig.Slave.MaxIdleConns = 1
-	appConfig.DBConfig.PoolConfig.Slave.MaxOpenConns = 1
-	appConfig.Environment = app.ENV_TESTING
+	app.AppConfig.DBConfig.MasterDSN = dsn
+	app.AppConfig.DBConfig.SlaveDSN = dsn
+	app.AppConfig.DBConfig.Driver = app.SQLiteDriver
+	app.AppConfig.DBConfig.PoolConfig.Master.MaxIdleConns = 1
+	app.AppConfig.DBConfig.PoolConfig.Master.MaxOpenConns = 1
+	app.AppConfig.DBConfig.PoolConfig.Slave.MaxIdleConns = 1
+	app.AppConfig.DBConfig.PoolConfig.Slave.MaxOpenConns = 1
+	app.AppConfig.Environment = app.ENV_TESTING
 
 	// Set up the database
-	mysqlCfg, cleanUp, err := db.Setup(appConfig)
+	mysqlCfg, cleanUp, err := db.Setup()
 	require.NoError(t, err)
 
 	mysqlCfg.Master.AutoMigrate(
 		model.Tenant{},
-		model.Account{})
+		model.Account{},
+		model.AccountVerification{},
+	)
 
 	// Set up the Gin server
 	if useServer {
-		serverEngine = server.Setup(appConfig, mysqlCfg)
+		serverEngine = server.Setup(mysqlCfg)
 	}
 
 	return serverEngine, cleanUp, mysqlCfg

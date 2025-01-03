@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-var AppConfig Config
+var AppConfig appConfig
 
 var getConfigValue = config.GetConfigValue
 var getConfigValueAsInt = config.GetConfigValueAsInt
@@ -25,7 +25,7 @@ const (
 	ENV_TESTING Environment = "testing"
 )
 
-type Config struct {
+type appConfig struct {
 	Port             string
 	CORSAllowOrigins string
 	RateLimit        int
@@ -33,6 +33,12 @@ type Config struct {
 	DBConfig         DBConfig
 	Environment      Environment
 	SMTP             smtp.Config
+	ExpiredDuration  ExpiredDuration
+}
+
+type ExpiredDuration struct {
+	EmailVerification    time.Duration
+	WhatsappVerification time.Duration
 }
 
 type EnvPoolConfig struct {
@@ -74,7 +80,7 @@ func Setup() {
 	setTimezone()
 	validator.Setup()
 	environment := getConfigValue("ENVIRONMENT", string(ENV_DEV))
-	AppConfig = Config{
+	AppConfig = appConfig{
 		Port:             getConfigValue("HTTP_PORT", "8080"),
 		CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "*"),
 		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 100),
@@ -90,6 +96,10 @@ func Setup() {
 		},
 		Environment: Environment(environment),
 		SMTP:        smtp.Setup(),
+		ExpiredDuration: ExpiredDuration{
+			EmailVerification:    time.Duration(getConfigValueAsInt("EMAIL_VERIFICATION_EXPIRED", 24)) * time.Hour,
+			WhatsappVerification: time.Duration(getConfigValueAsInt("WHATSAPP_VERIFICATION_EXPIRED", 24)) * time.Hour,
+		},
 	}
 
 }

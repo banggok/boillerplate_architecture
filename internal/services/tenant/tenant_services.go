@@ -21,7 +21,7 @@ type tenantCreateService struct {
 }
 
 func (t *tenantCreateService) Create(ctx *gin.Context, tenant *entity.Tenant) error {
-	if tenant == nil || (*tenant).GetAccounts() == nil {
+	if tenant == nil || (*tenant).Accounts() == nil {
 		return custom_errors.New(nil, custom_errors.TenantUnprocessEntity,
 			"tenant and account can not empty when create tenant")
 	}
@@ -47,25 +47,25 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 			key:   "countPhone",
 			repo:  "tenant",
 			query: "phone = ?",
-			args:  []interface{}{tenant.GetPhone()},
+			args:  []interface{}{tenant.Phone()},
 		},
 		{
 			key:   "countEmail",
 			repo:  "tenant",
 			query: "email = ?",
-			args:  []interface{}{tenant.GetEmail()},
+			args:  []interface{}{tenant.Email()},
 		},
 		{
 			key:   "countAccountPhone",
 			repo:  "account",
 			query: "phone = ?",
-			args:  []interface{}{(*tenant.GetAccounts())[0].GetPhone()},
+			args:  []interface{}{(*tenant.Accounts())[0].Phone()},
 		},
 		{
 			key:   "countAccountEmail",
 			repo:  "account",
 			query: "email = ?",
-			args:  []interface{}{(*tenant.GetAccounts())[0].GetEmail()},
+			args:  []interface{}{(*tenant.Accounts())[0].Email()},
 		},
 	}
 

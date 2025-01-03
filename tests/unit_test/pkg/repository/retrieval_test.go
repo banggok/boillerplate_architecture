@@ -93,7 +93,7 @@ func TestGetAll(t *testing.T) {
 
 	tenant := insertTenant(t, repo, ctx)
 
-	res, err := repo.Where("id = ?", tenant[1].GetID()).GetAll(ctx)
+	res, err := repo.Where("id = ?", tenant[1].ID()).GetAll(ctx)
 	assert.NoError(t, err)
 
 	expectedResJson, err := json.Marshal([]entity.Tenant{tenant[1]})

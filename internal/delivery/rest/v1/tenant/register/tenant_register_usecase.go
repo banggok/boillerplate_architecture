@@ -22,15 +22,21 @@ type tenantRegisterUsecase struct {
 
 // Execute implements TenantRegisterUsecase.
 func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenantRequest) (entity.Tenant, error) {
-
-	account, plainPassword, err := entity.NewAccount(
-		entity.NewAccountIdentity(request.Account.Name, request.Account.Email, request.Account.Phone),
-		nil)
+	accountVerification, err := entity.NewAccountVerification(entity.EMAIL_VERIFICATION, nil)
 	if err != nil {
 		return nil, custom_errors.New(
 			err,
 			custom_errors.InternalServerError,
-			"failed to validate new account entity")
+			"failed to create new account entity")
+	}
+	account, plainPassword, err := entity.NewAccount(
+		entity.NewAccountIdentity(request.Account.Name, request.Account.Email, request.Account.Phone, nil),
+		nil, &[]entity.AccountVerification{accountVerification})
+	if err != nil {
+		return nil, custom_errors.New(
+			err,
+			custom_errors.InternalServerError,
+			"failed to create new account entity")
 	}
 
 	tenant, err := entity.NewTenant(
@@ -42,7 +48,7 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 		return nil, custom_errors.New(
 			err,
 			custom_errors.InternalServerError,
-			"failed to validate new tenant entity")
+			"failed to create new tenant entity")
 	}
 
 	if err := t.createTenantService.Create(ctx, &tenant); err != nil {
@@ -57,15 +63,15 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 		if cfg.Environment != app.ENV_PROD {
 			return
 		}
-		if tenant.GetAccounts() == nil || len(*tenant.GetAccounts()) == 0 {
+		if tenant.Accounts() == nil || len(*tenant.Accounts()) == 0 {
 			logrus.Errorf("tenant account was empty")
 		}
-		account := (*tenant.GetAccounts())[0]
+		account := (*tenant.Accounts())[0]
 		if err := t.emailService.SendWelcomeEmail(
-			account.GetEmail(),
+			account.Email(),
 			email.WelcomeData{
-				TenantName: tenant.GetName(),
-				Username:   account.GetEmail(),
+				TenantName: tenant.Name(),
+				Username:   account.Email(),
 				Password:   *plainPassword,
 				LoginURL:   "",
 			},

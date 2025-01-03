@@ -21,19 +21,19 @@ import (
 func main() {
 	app.Setup()
 
-	mysqlCfg, cleanUp, err := db.Setup(app.AppConfig)
+	mysqlCfg, cleanUp, err := db.Setup()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer cleanUp(mysqlCfg)
 
-	server := server.Setup(app.AppConfig, mysqlCfg)
-	runServer(server, app.AppConfig)
+	server := server.Setup(mysqlCfg)
+	runServer(server)
 }
 
-func runServer(router *gin.Engine, cfg app.Config) {
+func runServer(router *gin.Engine) {
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%s", cfg.Port),
+		Addr:    fmt.Sprintf(":%s", app.AppConfig.Port),
 		Handler: router,
 	}
 
@@ -51,7 +51,7 @@ func runServer(router *gin.Engine, cfg app.Config) {
 	<-signalCh
 	log.Info("Signal received, shutting down server...")
 
-	ctx, cancel := context.WithTimeout(context.Background(), cfg.GracefulShutdown)
+	ctx, cancel := context.WithTimeout(context.Background(), app.AppConfig.GracefulShutdown)
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {

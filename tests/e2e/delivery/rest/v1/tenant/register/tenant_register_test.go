@@ -10,6 +10,8 @@ import (
 	test_register "github.com/banggok/boillerplate_architecture/tests/e2e/helper/request/tenant/register"
 	time_testing_helper "github.com/banggok/boillerplate_architecture/tests/e2e/helper/time"
 
+	"github.com/banggok/boillerplate_architecture/internal/config/app"
+	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/tenant/register"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
@@ -81,7 +83,12 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, responseBody.Data, expectedResponse)
 		var tenantDB model.Tenant
 
-		require.NoError(t, mysqlCfg.Slave.Session(&gorm.Session{}).Preload("Accounts").First(&tenantDB).Error)
+		require.NoError(t, mysqlCfg.Slave.Session(&gorm.Session{}).
+			Preload("Accounts").Preload("Accounts.AccountVerifications").First(&tenantDB).Error)
+
+		expiredDuration := app.AppConfig.ExpiredDuration.EmailVerification
+		expiresAt := time.Now().UTC().Add(expiredDuration)
+
 		expectedTenantDB := model.Tenant{
 			Metadata: model.Metadata{
 				ID:        1,
@@ -97,14 +104,30 @@ func TestTenantRegister(t *testing.T) {
 			ClosingHours: reqBody.ClosingHours,
 			Accounts: &[]model.Account{
 				{
-					ID:        1,
-					Name:      reqBody.Account.Name,
-					Email:     reqBody.Account.Email,
-					Phone:     reqBody.Account.Phone,
-					Password:  (*tenantDB.Accounts)[0].Password,
-					TenantID:  1,
-					CreatedAt: time.Now(),
-					UpdatedAt: time.Now(),
+					Metadata: model.Metadata{
+						ID:        1,
+						CreatedAt: time.Now(),
+						UpdatedAt: time.Now(),
+					},
+					Name:     reqBody.Account.Name,
+					Email:    reqBody.Account.Email,
+					Phone:    reqBody.Account.Phone,
+					Password: (*tenantDB.Accounts)[0].Password,
+					TenantID: 1,
+					AccountVerifications: &[]model.AccountVerification{
+						{
+							Metadata: model.Metadata{
+								ID:        1,
+								CreatedAt: time.Now(),
+								UpdatedAt: time.Now(),
+							},
+							AccountID: 1,
+							Type:      string(entity.EMAIL_VERIFICATION),
+							Token:     (*(*tenantDB.Accounts)[0].AccountVerifications)[0].Token,
+							ExpiresAt: expiresAt,
+							Verified:  false,
+						},
+					},
 				},
 			},
 		}
@@ -119,6 +142,7 @@ func TestTenantRegister(t *testing.T) {
 
 		for i := range *expectedTenantDB.Accounts {
 			accountDb := (*tenantDB.Accounts)[i]
+
 			err = time_testing_helper.Sanitize(&accountDb.CreatedAt,
 				(*expectedTenantDB.Accounts)[i].CreatedAt)
 			require.NoError(t, err)
@@ -126,6 +150,24 @@ func TestTenantRegister(t *testing.T) {
 			err = time_testing_helper.Sanitize(&accountDb.UpdatedAt,
 				(*expectedTenantDB.Accounts)[i].UpdatedAt)
 			require.NoError(t, err)
+
+			for j := range *accountDb.AccountVerifications {
+				accountVerification := (*accountDb.AccountVerifications)[j]
+
+				err = time_testing_helper.Sanitize(&accountVerification.ExpiresAt,
+					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].ExpiresAt)
+				require.NoError(t, err)
+
+				err = time_testing_helper.Sanitize(&accountVerification.CreatedAt,
+					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].CreatedAt)
+				require.NoError(t, err)
+
+				err = time_testing_helper.Sanitize(&accountVerification.UpdatedAt,
+					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].UpdatedAt)
+				require.NoError(t, err)
+
+				(*accountDb.AccountVerifications)[j] = accountVerification
+			}
 			(*tenantDB.Accounts)[i] = accountDb
 		}
 

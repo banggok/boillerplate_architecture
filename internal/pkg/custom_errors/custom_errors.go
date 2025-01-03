@@ -21,14 +21,17 @@ func (e CustomError) Error() string {
 }
 
 func New(err error, code ErrorCode, message string, detail ...map[string]string) CustomError {
-	// If err is already a CustomError, avoid wrapping it again
 	logger := logrus.StandardLogger()
+
+	// If err is nil, use message as error message
 	if err == nil {
 		err = errors.New(message)
 	}
 	logger.WithFields(logrus.Fields{
 		message: fmt.Sprintf("%s: %s", message, err.Error()),
 	})
+
+	// If err is already a CustomError, avoid wrapping it again
 	if customErr, ok := err.(CustomError); ok {
 		return customErr
 	}
@@ -73,6 +76,9 @@ const (
 	AccountBadRequest      ErrorCode = 30400
 	AccountConflictEntity  ErrorCode = 30409
 	AccountNotFound        ErrorCode = 30404
+
+	AccountVerificationNotFound        ErrorCode = 40404
+	AccountVerificationUnprocessEntity ErrorCode = 40422
 
 	// Add more keys as needed
 )

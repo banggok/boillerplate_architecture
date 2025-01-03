@@ -16,8 +16,8 @@ type RegisterTenantResponse struct {
 // NewRegisterTenantResponse transforms a Tenant entity into a RegisterTenantResponse DTO.
 func NewRegisterTenantResponse(tenant entity.Tenant) RegisterTenantResponse {
 	return RegisterTenantResponse{
-		ID:        tenant.GetID(),
-		CreatedAt: tenant.GetCreatedAt(),
-		UpdatedAt: tenant.GetUpdatedAt(),
+		ID:        tenant.ID(),
+		CreatedAt: tenant.CreatedAt(),
+		UpdatedAt: tenant.UpdatedAt(),
 	}
 }

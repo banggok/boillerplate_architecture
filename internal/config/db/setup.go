@@ -30,14 +30,14 @@ var logLevel map[app.Environment]logger.LogLevel = map[app.Environment]logger.Lo
 	app.ENV_TESTING: logger.Info,
 }
 
-func Setup(appCfg app.Config) (*DBConnection, func(*DBConnection), error) {
+func Setup() (*DBConnection, func(*DBConnection), error) {
 	// Connect to the master database
-	dbCfg := appCfg.DBConfig
+	dbCfg := app.AppConfig.DBConfig
 	dbLogger := logger.New(
 		log.New(),
 		logger.Config{
 			SlowThreshold:             time.Second,
-			LogLevel:                  logLevel[appCfg.Environment],
+			LogLevel:                  logLevel[app.AppConfig.Environment],
 			IgnoreRecordNotFoundError: true,
 			Colorful:                  true,
 		},

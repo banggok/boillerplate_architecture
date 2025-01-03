@@ -3,9 +3,9 @@ package entity
 import "time"
 
 type Entity interface {
-	GetID() uint
-	GetCreatedAt() time.Time
-	GetUpdatedAt() time.Time
+	ID() uint
+	CreatedAt() time.Time
+	UpdatedAt() time.Time
 }
 type entity struct {
 	id        uint      // id from database
@@ -13,15 +13,15 @@ type entity struct {
 	updatedAt time.Time // timestamp from database
 }
 
-func (a *entity) GetID() uint {
+func (a *entity) ID() uint {
 	return a.id
 }
 
-func (a *entity) GetCreatedAt() time.Time {
+func (a *entity) CreatedAt() time.Time {
 	return a.createdAt
 }
 
-func (a *entity) GetUpdatedAt() time.Time {
+func (a *entity) UpdatedAt() time.Time {
 	return a.updatedAt
 }
 

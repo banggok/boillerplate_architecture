@@ -7,14 +7,14 @@ import (
 
 type Tenant interface {
 	Entity
-	GetName() string
-	GetAddress() string
-	GetEmail() string
-	GetAccounts() *[]Account
-	GetPhone() string
-	GetTimezone() string
-	GetOpeningHours() string
-	GetClosingHours() string
+	Name() string
+	Address() string
+	Email() string
+	Accounts() *[]Account
+	Phone() string
+	Timezone() string
+	OpeningHours() string
+	ClosingHours() string
 }
 
 type tenantImpl struct {
@@ -133,40 +133,40 @@ func MakeTenant(metadata metadata,
 }
 
 // Getter and Setter for Name
-func (t *tenantImpl) GetName() string {
+func (t *tenantImpl) Name() string {
 	return t.name
 }
 
 // Getter and Setter for Address
-func (t *tenantImpl) GetAddress() string {
+func (t *tenantImpl) Address() string {
 	return t.address
 }
 
 // Getter and Setter for Email
-func (t *tenantImpl) GetEmail() string {
+func (t *tenantImpl) Email() string {
 	return t.email
 }
 
 // Getter and Setter for Phone
-func (t *tenantImpl) GetPhone() string {
+func (t *tenantImpl) Phone() string {
 	return t.phone
 }
 
 // Getter and Setter for Timezone
-func (t *tenantImpl) GetTimezone() string {
+func (t *tenantImpl) Timezone() string {
 	return t.timezone
 }
 
 // Getter and Setter for OpeningHours
-func (t *tenantImpl) GetOpeningHours() string {
+func (t *tenantImpl) OpeningHours() string {
 	return t.openingHours
 }
 
 // Getter and Setter for ClosingHours
-func (t *tenantImpl) GetClosingHours() string {
+func (t *tenantImpl) ClosingHours() string {
 	return t.closingHours
 }
 
-func (t *tenantImpl) GetAccounts() *[]Account {
+func (t *tenantImpl) Accounts() *[]Account {
 	return t.accounts
 }

@@ -21,38 +21,38 @@ import (
 	"github.com/ulule/limiter/v3/drivers/store/memory"
 )
 
-func Setup(appCfg app.Config, mysqlCfg *db.DBConnection) *gin.Engine {
-	if appCfg.Environment == app.ENV_PROD {
+func Setup(mysqlCfg *db.DBConnection) *gin.Engine {
+	if app.AppConfig.Environment == app.ENV_PROD {
 		gin.SetMode(gin.ReleaseMode)
 	}
 	server := gin.Default()
 
-	setupMiddleware(server, appCfg, mysqlCfg)
+	setupMiddleware(server, mysqlCfg)
 
-	setupRoutes(server, appCfg)
+	setupRoutes(server)
 
 	return server
 }
 
-func setupRoutes(server *gin.Engine, cfg app.Config) {
+func setupRoutes(server *gin.Engine) {
 	// Health route
 	server.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
-	serviceCfg := services.Setup(cfg)
+	serviceCfg := services.Setup()
 	rest.RegisterRoutes(server, serviceCfg)
 }
 
-func setupMiddleware(router *gin.Engine, appCfg app.Config, db *db.DBConnection) {
+func setupMiddleware(router *gin.Engine, db *db.DBConnection) {
 	router.Use(requestid.New())
 	router.Use(cors.New(cors.Config{
-		AllowOrigins: []string{appCfg.CORSAllowOrigins},
+		AllowOrigins: []string{app.AppConfig.CORSAllowOrigins},
 		AllowMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
 	router.Use(log_middleware.CustomLogger())
 
-	router.Use(ginmiddleware.NewMiddleware(setupRateLimiter(appCfg.RateLimit)))
+	router.Use(ginmiddleware.NewMiddleware(setupRateLimiter(app.AppConfig.RateLimit)))
 	router.Use(transaction.CustomTransaction(db.Master, db.Slave))
 	router.Use(recovery.CustomRecoveryMiddleware())
 }

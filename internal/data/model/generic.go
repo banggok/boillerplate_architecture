@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type Metadata struct {
 	ID        uint      `gorm:"primaryKey;autoIncrement"` // Primary key, auto-incrementing

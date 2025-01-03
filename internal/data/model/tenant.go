@@ -25,24 +25,24 @@ func (Tenant) NotFoundError() custom_errors.ErrorCode {
 	return custom_errors.TenantNotFound
 }
 
-func NewTenantModel(entity entity.Tenant) Tenant {
+func NewTenantModel(tenantEntity entity.Tenant) Tenant {
 	tenant := Tenant{
 		Metadata: Metadata{
-			ID:        entity.GetID(),
-			CreatedAt: entity.GetCreatedAt(),
-			UpdatedAt: entity.GetUpdatedAt(),
+			ID:        tenantEntity.ID(),
+			CreatedAt: tenantEntity.CreatedAt(),
+			UpdatedAt: tenantEntity.UpdatedAt(),
 		},
-		Name:         entity.GetName(),
-		Address:      entity.GetAddress(),
-		Email:        entity.GetEmail(),
-		Phone:        entity.GetPhone(),
-		Timezone:     entity.GetTimezone(),
-		OpeningHours: entity.GetOpeningHours(),
-		ClosingHours: entity.GetClosingHours(),
+		Name:         tenantEntity.Name(),
+		Address:      tenantEntity.Address(),
+		Email:        tenantEntity.Email(),
+		Phone:        tenantEntity.Phone(),
+		Timezone:     tenantEntity.Timezone(),
+		OpeningHours: tenantEntity.OpeningHours(),
+		ClosingHours: tenantEntity.ClosingHours(),
 	}
-	if entity.GetAccounts() != nil {
+	if tenantEntity.Accounts() != nil {
 		accountModels := make([]Account, 0)
-		for _, account := range *entity.GetAccounts() {
+		for _, account := range *tenantEntity.Accounts() {
 
 			accountModels = append(accountModels, NewAccountModel(account))
 		}
