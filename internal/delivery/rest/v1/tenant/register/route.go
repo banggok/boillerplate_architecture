@@ -5,13 +5,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRoutes(
+func RegisterRoute(
 	tenantV1RouterGroup *gin.RouterGroup,
 	serviceConfig services.Config,
 ) {
 	tenantCreateService := serviceConfig.Tenant()
 	email := serviceConfig.Email()
-	uc := newTenantRegisterUsecase(tenantCreateService, email)
-	h := newTenantRegisterHandler(uc)
-	tenantV1RouterGroup.POST("", h.Register)
+	uc := newUsecase(tenantCreateService, email)
+	h := newHandler(uc)
+	tenantV1RouterGroup.POST("", h.register)
 }

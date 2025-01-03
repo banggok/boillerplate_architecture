@@ -24,7 +24,7 @@ import (
 )
 
 func TestTenantRegister(t *testing.T) {
-	reqBody := register.RegisterTenantRequest{
+	reqBody := register.Request{
 		Name:         "Doe's Bakery",
 		Address:      "123 Main Street, Springfield, USA",
 		Email:        "business@example.com",
@@ -32,7 +32,7 @@ func TestTenantRegister(t *testing.T) {
 		Timezone:     "America/New_York",
 		OpeningHours: "08:00",
 		ClosingHours: "20:00",
-		Account: register.RegisterTenantAccountRequest{
+		Account: register.Account{
 			Name:  "John Doe",
 			Email: "rtriasmono@gmail.com",
 			Phone: "+1234567890",
@@ -54,9 +54,9 @@ func TestTenantRegister(t *testing.T) {
 		require.NoError(t, err)
 
 		var responseBody struct {
-			Status  string                          `json:"status"`
-			Message string                          `json:"message"`
-			Data    register.RegisterTenantResponse `json:"data"`
+			Status  string            `json:"status"`
+			Message string            `json:"message"`
+			Data    register.Response `json:"data"`
 		}
 
 		err = json.Unmarshal(body, &responseBody)
@@ -65,7 +65,7 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, "success", responseBody.Status)
 		assert.Equal(t, "Tenant registered successfully", responseBody.Message)
 
-		expectedResponse := register.RegisterTenantResponse{
+		expectedResponse := register.Response{
 			ID:        1,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),

@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/api/v1/tenants/": {
             "post": {
-                "description": "Register a new tenant in the system",
+                "description": "register a new tenant in the system",
                 "consumes": [
                     "application/json"
                 ],
@@ -27,7 +27,7 @@ const docTemplate = `{
                 "tags": [
                     "Tenants"
                 ],
-                "summary": "Register Tenant",
+                "summary": "register Tenant",
                 "parameters": [
                     {
                         "description": "Tenant registration request body",
@@ -35,7 +35,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/register.RegisterTenantRequest"
+                            "$ref": "#/definitions/register.Request"
                         }
                     }
                 ],
@@ -43,7 +43,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/register.RegisterTenantResponse"
+                            "$ref": "#/definitions/register.Response"
                         }
                     },
                     "400": {
@@ -80,7 +80,7 @@ const docTemplate = `{
                 }
             }
         },
-        "register.RegisterTenantAccountRequest": {
+        "register.Account": {
             "type": "object",
             "required": [
                 "email",
@@ -105,7 +105,7 @@ const docTemplate = `{
                 }
             }
         },
-        "register.RegisterTenantRequest": {
+        "register.Request": {
             "description": "Tenant registration request body",
             "type": "object",
             "required": [
@@ -122,7 +122,7 @@ const docTemplate = `{
                     "description": "Admin user details",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/register.RegisterTenantAccountRequest"
+                            "$ref": "#/definitions/register.Account"
                         }
                     ]
                 },
@@ -164,7 +164,7 @@ const docTemplate = `{
                 }
             }
         },
-        "register.RegisterTenantResponse": {
+        "register.Response": {
             "type": "object",
             "properties": {
                 "created_at": {

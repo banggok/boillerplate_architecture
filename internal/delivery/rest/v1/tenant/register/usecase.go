@@ -10,18 +10,18 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TenantRegisterUsecase defines the interface for registering a tenant
-type TenantRegisterUsecase interface {
-	Execute(ctx *gin.Context, request RegisterTenantRequest) (entity.Tenant, error)
+// usecase defines the interface for registering a tenant
+type usecase interface {
+	execute(ctx *gin.Context, request Request) (entity.Tenant, error)
 }
 
-type tenantRegisterUsecase struct {
+type usecaseImpl struct {
 	createTenantService tenant.Service
 	emailService        email.Service
 }
 
-// Execute implements TenantRegisterUsecase.
-func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenantRequest) (entity.Tenant, error) {
+// execute implements TenantRegisterUsecase.
+func (t *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Tenant, error) {
 	accountVerification, err := entity.NewAccountVerification(entity.EMAIL_VERIFICATION, nil)
 	if err != nil {
 		return nil, custom_errors.New(
@@ -83,8 +83,8 @@ func (t *tenantRegisterUsecase) Execute(ctx *gin.Context, request RegisterTenant
 	return tenant, nil
 }
 
-func newTenantRegisterUsecase(createTenantService tenant.Service, email email.Service) TenantRegisterUsecase {
-	return &tenantRegisterUsecase{
+func newUsecase(createTenantService tenant.Service, email email.Service) usecase {
+	return &usecaseImpl{
 		createTenantService: createTenantService,
 		emailService:        email,
 	}

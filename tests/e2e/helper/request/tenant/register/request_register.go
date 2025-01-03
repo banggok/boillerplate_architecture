@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func CallPostTenants(t *testing.T, reqBody register.RegisterTenantRequest,
+func CallPostTenants(t *testing.T, reqBody register.Request,
 	server *gin.Engine) http.Response {
 	payload, err := json.Marshal(reqBody)
 	require.NoError(t, err)

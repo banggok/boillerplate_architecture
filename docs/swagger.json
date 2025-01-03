@@ -8,7 +8,7 @@
     "paths": {
         "/api/v1/tenants/": {
             "post": {
-                "description": "Register a new tenant in the system",
+                "description": "register a new tenant in the system",
                 "consumes": [
                     "application/json"
                 ],
@@ -18,7 +18,7 @@
                 "tags": [
                     "Tenants"
                 ],
-                "summary": "Register Tenant",
+                "summary": "register Tenant",
                 "parameters": [
                     {
                         "description": "Tenant registration request body",
@@ -26,7 +26,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/register.RegisterTenantRequest"
+                            "$ref": "#/definitions/register.Request"
                         }
                     }
                 ],
@@ -34,7 +34,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/register.RegisterTenantResponse"
+                            "$ref": "#/definitions/register.Response"
                         }
                     },
                     "400": {
@@ -71,7 +71,7 @@
                 }
             }
         },
-        "register.RegisterTenantAccountRequest": {
+        "register.Account": {
             "type": "object",
             "required": [
                 "email",
@@ -96,7 +96,7 @@
                 }
             }
         },
-        "register.RegisterTenantRequest": {
+        "register.Request": {
             "description": "Tenant registration request body",
             "type": "object",
             "required": [
@@ -113,7 +113,7 @@
                     "description": "Admin user details",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/register.RegisterTenantAccountRequest"
+                            "$ref": "#/definitions/register.Account"
                         }
                     ]
                 },
@@ -155,7 +155,7 @@
                 }
             }
         },
-        "register.RegisterTenantResponse": {
+        "register.Response": {
             "type": "object",
             "properties": {
                 "created_at": {

@@ -10,7 +10,7 @@ definitions:
       message:
         type: string
     type: object
-  register.RegisterTenantAccountRequest:
+  register.Account:
     properties:
       email:
         description: Admin's email
@@ -29,12 +29,12 @@ definitions:
     - name
     - phone
     type: object
-  register.RegisterTenantRequest:
+  register.Request:
     description: Tenant registration request body
     properties:
       account:
         allOf:
-        - $ref: '#/definitions/register.RegisterTenantAccountRequest'
+        - $ref: '#/definitions/register.Account'
         description: Admin user details
       address:
         description: Tenant's address
@@ -74,7 +74,7 @@ definitions:
     - phone
     - timezone
     type: object
-  register.RegisterTenantResponse:
+  register.Response:
     properties:
       created_at:
         type: string
@@ -92,21 +92,21 @@ paths:
     post:
       consumes:
       - application/json
-      description: Register a new tenant in the system
+      description: register a new tenant in the system
       parameters:
       - description: Tenant registration request body
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/register.RegisterTenantRequest'
+          $ref: '#/definitions/register.Request'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/register.RegisterTenantResponse'
+            $ref: '#/definitions/register.Response'
         "400":
           description: Invalid request payload
           schema:
@@ -115,7 +115,7 @@ paths:
           description: Failed to register tenant
           schema:
             $ref: '#/definitions/custom_errors.CustomError'
-      summary: Register Tenant
+      summary: register Tenant
       tags:
       - Tenants
 swagger: "2.0"

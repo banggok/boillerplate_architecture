@@ -8,5 +8,5 @@ import (
 
 func RegisterRoutes(v1 *gin.RouterGroup, serviceConfig services.Config) {
 	tenants := v1.Group("/tenants")
-	register.RegisterRoutes(tenants, serviceConfig)
+	register.RegisterRoute(tenants, serviceConfig)
 }
