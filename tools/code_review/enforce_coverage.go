@@ -69,9 +69,9 @@ func enforce_coverage() {
 		fmt.Println("Functions with low coverage:")
 		for _, fn := range lowCoverageFunctions {
 			// Remove module name
-			parts := strings.SplitN(fn.Path, "/", 2)
-			if len(parts) > 1 {
-				fn.Path = parts[1]
+			parts := strings.SplitN(fn.Path, "/", 4)
+			if len(parts) > 3 {
+				fn.Path = parts[3]
 			}
 			fmt.Println(" -", fn.Path)
 		}
