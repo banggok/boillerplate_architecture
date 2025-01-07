@@ -5,6 +5,7 @@ import (
 
 	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	"github.com/banggok/boillerplate_architecture/internal/config/validator"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/password"
 )
@@ -13,26 +14,25 @@ type AccountVerification interface {
 	Entity
 	AccountID() uint
 	Account() Account
-	VerificationType() VerificationType
+	VerificationType() valueobject.VerificationType
 	Token() string
 	ExpiresAt() time.Time
 	Verified() bool
+	VerifiedSuccess()
 }
-
-type VerificationType string
-
-const (
-	EMAIL_VERIFICATION VerificationType = "EMAIL"
-)
 
 type accountVerificationImpl struct {
 	entity
 	accountID        uint
 	account          Account
-	verificationType VerificationType
+	verificationType valueobject.VerificationType
 	token            string
 	expiresAt        time.Time
 	verified         bool
+}
+
+func (a *accountVerificationImpl) VerifiedSuccess() {
+	a.verified = true
 }
 
 // Account implements AccountVerification.
@@ -62,7 +62,7 @@ func (a *accountVerificationImpl) Token() string {
 }
 
 // VerificationType implements AccountVerification.
-func (a *accountVerificationImpl) VerificationType() VerificationType {
+func (a *accountVerificationImpl) VerificationType() valueobject.VerificationType {
 	return a.verificationType
 }
 
@@ -72,17 +72,17 @@ func (a *accountVerificationImpl) Verified() bool {
 }
 
 type newAccountVerificationParams struct {
-	verificationType VerificationType `validate:"required"`
+	verificationType valueobject.VerificationType `validate:"required"`
 }
 
 type accountVerificationData struct {
-	verificationType VerificationType `validate:"required"`
-	token            string           `validate:"required"`
-	expiresAt        time.Time        `validate:"required"`
-	verified         bool             `validate:"required"`
+	verificationType valueobject.VerificationType `validate:"required"`
+	token            string                       `validate:"required"`
+	expiresAt        time.Time                    `validate:"required"`
+	verified         bool                         `validate:"required"`
 }
 
-func NewAccountVerificationData(verificationType VerificationType, token string,
+func NewAccountVerificationData(verificationType valueobject.VerificationType, token string,
 	expiresAt time.Time, verified bool) accountVerificationData {
 	return accountVerificationData{
 		verificationType: verificationType,
@@ -149,7 +149,7 @@ func MakeAccountVerification(metadata metadata, verificationData accountVerifica
 	return res, nil
 }
 
-func NewAccountVerification(verificationType VerificationType,
+func NewAccountVerification(verificationType valueobject.VerificationType,
 	account Account) (AccountVerification, error) {
 	var res *accountVerificationImpl
 	param := newAccountVerificationParams{

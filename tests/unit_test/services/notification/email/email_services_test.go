@@ -22,7 +22,7 @@ var _ email.EmailSender = &MockEmailSender{}
 
 func TestSendWelcomeEmail(t *testing.T) {
 	t.Run("Send Email success", func(t *testing.T) {
-		service := email.NewService(smtp.Config{}, &MockEmailSender{})
+		service := email.New(smtp.Config{}, &MockEmailSender{})
 
 		err := service.SendWelcomeEmail("receiver", email.WelcomeData{})
 
@@ -30,7 +30,7 @@ func TestSendWelcomeEmail(t *testing.T) {
 	})
 
 	t.Run("Send Email Failed", func(t *testing.T) {
-		service := email.NewService(smtp.Config{}, nil)
+		service := email.New(smtp.Config{}, nil)
 
 		err := service.SendWelcomeEmail("receiver", email.WelcomeData{})
 

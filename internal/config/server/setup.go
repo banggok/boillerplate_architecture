@@ -9,12 +9,11 @@ import (
 	"github.com/banggok/boillerplate_architecture/internal/delivery/rest"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/recovery"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/middleware/transaction"
-	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/requestid"
 	"github.com/gin-gonic/gin"
 
-	log_middleware "github.com/banggok/boillerplate_architecture/internal/pkg/middleware/log"
+	logmiddleware "github.com/banggok/boillerplate_architecture/internal/pkg/middleware/log"
 
 	"github.com/ulule/limiter/v3"
 	ginmiddleware "github.com/ulule/limiter/v3/drivers/middleware/gin"
@@ -39,8 +38,7 @@ func setupRoutes(server *gin.Engine) {
 	server.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "healthy"})
 	})
-	serviceCfg := services.Setup()
-	rest.RegisterRoutes(server, serviceCfg)
+	rest.RegisterRoutes(server)
 }
 
 func setupMiddleware(router *gin.Engine, db *db.DBConnection) {
@@ -50,7 +48,7 @@ func setupMiddleware(router *gin.Engine, db *db.DBConnection) {
 		AllowMethods: []string{"GET", "POST", "PATCH", "PUT", "DELETE"},
 		AllowHeaders: []string{"Origin", "Content-Type", "Authorization"},
 	}))
-	router.Use(log_middleware.CustomLogger())
+	router.Use(logmiddleware.CustomLogger())
 
 	router.Use(ginmiddleware.NewMiddleware(setupRateLimiter(app.AppConfig.RateLimit)))
 	router.Use(transaction.CustomTransaction(db.Master, db.Slave))

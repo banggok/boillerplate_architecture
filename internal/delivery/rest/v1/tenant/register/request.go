@@ -1,14 +1,16 @@
 package register
 
 import (
-	"fmt"
-
-	"github.com/go-playground/validator/v10"
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/request"
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
+	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 // Request represents the payload for tenant registration
 // @description Tenant registration request body
 type Request struct {
+	request.Base
 	Name         string  `json:"name" validate:"required" example:"Example Tenant"`               // Tenant's name
 	Address      string  `json:"address" validate:"omitempty,max=255" example:"123 Main Street"`  // Tenant's address
 	Email        string  `json:"email" validate:"required,email" example:"tenant@example.com"`    // Tenant's email
@@ -25,59 +27,42 @@ type Account struct {
 	Phone string `json:"phone" validate:"required,e164" example:"+1234567890"`        // Admin's phone
 }
 
-// customValidationMessages maps validation errors to user-friendly messages.
-func (r *Request) customValidationMessages(err error) map[string]string {
-	validationErrors := err.(validator.ValidationErrors)
-	errorMessages := make(map[string]string)
-
-	for _, fieldError := range validationErrors {
-		field := fieldError.StructNamespace() // Use StructNamespace for nested fields
-		message := mapValidationMessage(field)
-		if message != "" {
-			key := formatFieldKey(field)
-			errorMessages[key] = message
-		}
-	}
-
-	return errorMessages
+var fieldMessages = map[string]string{
+	"Request.Name":          "Name is required.",
+	"Request.Address":       "Address must not exceed 255 characters.",
+	"Request.Email":         "Email is required and must be in a valid format.",
+	"Request.Phone":         "Phone is required and must be in a valid international format (E.164).",
+	"Request.Timezone":      "Timezone is required and must be a valid IANA timezone.",
+	"Request.OpeningHours":  "Opening hours is required and must be in the format HH:mm.",
+	"Request.ClosingHours":  "Closing hours is required and must be in the format HH:mm.",
+	"Request.Account.Name":  "Account name is required and can only contain letters and spaces.",
+	"Request.Account.Email": "Account email is required and must be in a valid format.",
+	"Request.Account.Phone": "Account phone is required and must be in a valid international format (E.164).",
 }
 
-// mapValidationMessage maps a field name to a user-friendly error message.
-func mapValidationMessage(field string) string {
-	fieldMessages := map[string]string{
-		"Request.Name":          "Name is required.",
-		"Request.Address":       "Address must not exceed 255 characters.",
-		"Request.Email":         "Email is required and must be in a valid format.",
-		"Request.Phone":         "Phone is required and must be in a valid international format (E.164).",
-		"Request.Timezone":      "Timezone is required and must be a valid IANA timezone.",
-		"Request.OpeningHours":  "Opening hours is required and must be in the format HH:mm.",
-		"Request.ClosingHours":  "Closing hours is required and must be in the format HH:mm.",
-		"Request.Account.Name":  "Account name is required and can only contain letters and spaces.",
-		"Request.Account.Email": "Account email is required and must be in a valid format.",
-		"Request.Account.Phone": "Account phone is required and must be in a valid international format (E.164).",
-	}
-	if message, exists := fieldMessages[field]; exists {
-		return message
-	}
-	return fmt.Sprintf("Invalid value for %s.", field)
+var fieldKeys = map[string]string{
+	"Request.Name":          "name",
+	"Request.Address":       "address",
+	"Request.Email":         "email",
+	"Request.Phone":         "phone",
+	"Request.Timezone":      "timezone",
+	"Request.OpeningHours":  "opening_hours",
+	"Request.ClosingHours":  "closing_hours",
+	"Request.Account.Name":  "account.name",
+	"Request.Account.Email": "account.email",
+	"Request.Account.Phone": "account.phone",
 }
 
-// formatFieldKey formats the field key for use in the errorMessages map.
-func formatFieldKey(field string) string {
-	fieldKeys := map[string]string{
-		"Request.Name":          "name",
-		"Request.Address":       "address",
-		"Request.Email":         "email",
-		"Request.Phone":         "phone",
-		"Request.Timezone":      "timezone",
-		"Request.OpeningHours":  "opening_hours",
-		"Request.ClosingHours":  "closing_hours",
-		"Request.Account.Name":  "account.name",
-		"Request.Account.Email": "account.email",
-		"Request.Account.Phone": "account.phone",
-	}
-	if key, exists := fieldKeys[field]; exists {
-		return key
-	}
-	return field
+// ParseAndValidateRequest implements request.IRequest.
+// Subtle: this method shadows the method (BaseRequest).ParseAndValidateRequest of Request.BaseRequest.
+func (r *Request) ParseAndValidateRequest(c *gin.Context, binding binding.Binding) error {
+	return r.Base.ParseAndValidateRequest(request.RequestParam{
+		Context:                  c,
+		Request:                  r,
+		Binding:                  binding,
+		FieldMessages:            fieldMessages,
+		FieldKeys:                fieldKeys,
+		BadRequestErrorCode:      custom_errors.TenantBadRequest,
+		UnprocessEntityErrorCode: custom_errors.TenantUnprocessEntity,
+	})
 }

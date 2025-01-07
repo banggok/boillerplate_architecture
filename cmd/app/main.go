@@ -13,19 +13,24 @@ import (
 
 	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	"github.com/banggok/boillerplate_architecture/internal/config/db"
+	eventconfig "github.com/banggok/boillerplate_architecture/internal/config/event"
 	"github.com/banggok/boillerplate_architecture/internal/config/server"
+	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	app.Setup()
+	services.Setup()
 
 	mysqlCfg, cleanUp, err := db.Setup()
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer cleanUp(mysqlCfg)
+
+	eventconfig.Setup(mysqlCfg.Master)
 
 	server := server.Setup(mysqlCfg)
 	runServer(server)

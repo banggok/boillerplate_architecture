@@ -14,11 +14,7 @@ const DBREAD = "db_read"
 
 func CustomTransaction(master, slave *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		read := slave.Session(&gorm.Session{AllowGlobalUpdate: false,
-			PrepareStmt:            true,
-			QueryFields:            true,
-			SkipDefaultTransaction: true,
-		})
+		read := slave.Session(&gorm.Session{AllowGlobalUpdate: false})
 
 		c.Set(DBREAD, read)
 

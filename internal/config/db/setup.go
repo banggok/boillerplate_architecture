@@ -43,9 +43,13 @@ func Setup() (*DBConnection, func(*DBConnection), error) {
 		},
 	)
 	driver := dialector[dbCfg.Driver]
-	master, err := gorm.Open(driver(dbCfg.MasterDSN), &gorm.Config{
-		Logger: dbLogger,
-	})
+	gormConfig := &gorm.Config{
+		Logger:                 dbLogger,
+		SkipDefaultTransaction: true,
+		PrepareStmt:            true,
+		QueryFields:            true,
+	}
+	master, err := gorm.Open(driver(dbCfg.MasterDSN), gormConfig)
 	if err != nil {
 		return nil, nil, err // coverage:ignore-line
 	}
@@ -60,9 +64,7 @@ func Setup() (*DBConnection, func(*DBConnection), error) {
 	slave := master
 
 	// Connect to the slave database
-	slave, err = gorm.Open(driver(dbCfg.SlaveDSN), &gorm.Config{
-		Logger: dbLogger,
-	})
+	slave, err = gorm.Open(driver(dbCfg.SlaveDSN), gormConfig)
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to connect to slave database: %w", err) // coverage:ignore-line
 	}

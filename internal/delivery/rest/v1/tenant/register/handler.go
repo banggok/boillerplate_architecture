@@ -3,9 +3,9 @@ package register
 import (
 	"net/http"
 
-	"github.com/banggok/boillerplate_architecture/internal/config/validator"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 )
 
 // handler represents the HTTP handler for tenant-related operations
@@ -38,10 +38,10 @@ func newHandler(
 // @Failure 422 {object} custom_errors.CustomError "Failed to register tenant"
 // @Router /api/v1/tenants/ [post]
 func (h *handlerImpl) register(c *gin.Context) {
-	var request Request
+	request := Request{}
 
 	// Parse and validate the request payload
-	if err := h.parseAndValidateRequest(c, &request); err != nil {
+	if err := request.ParseAndValidateRequest(c, binding.JSON); err != nil {
 		return
 	}
 
@@ -58,28 +58,4 @@ func (h *handlerImpl) register(c *gin.Context) {
 		"message": "Tenant registered successfully",
 		"data":    transform(tenant),
 	})
-}
-
-func (h *handlerImpl) parseAndValidateRequest(c *gin.Context, request *Request) error {
-	// Parse the incoming JSON request
-	if err := c.ShouldBindJSON(request); err != nil {
-		c.Error(custom_errors.New(
-			err,
-			custom_errors.TenantBadRequest,
-			"invalid tenant register request payload"))
-		return err
-	}
-
-	// Validate the request using the validator
-	if err := validator.Validate.Struct(request); err != nil {
-		validationErrors := request.customValidationMessages(err)
-		c.Error(custom_errors.New(
-			err,
-			custom_errors.TenantUnprocessEntity,
-			"failed to validate request payload",
-			validationErrors))
-		return err
-	}
-
-	return nil
 }

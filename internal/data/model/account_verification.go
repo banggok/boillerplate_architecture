@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 )
 
@@ -39,9 +40,14 @@ func (a *AccountVerification) ToEntity() (entity.AccountVerification, error) {
 				"failed to convert account model to entity")
 		}
 	}
+
+	verificationType, err := valueobject.ParseVerificationType(a.Type)
+	if err != nil {
+		return nil, custom_errors.New(err, custom_errors.InternalServerError, "model AccountVerification.Type invalid")
+	}
 	return entity.MakeAccountVerification(
 		entity.NewMetadata(a.ID, a.CreatedAt, a.UpdatedAt),
-		entity.NewAccountVerificationData(entity.VerificationType(a.Type), a.Token, a.ExpiresAt, a.Verified),
+		entity.NewAccountVerificationData(verificationType, a.Token, a.ExpiresAt, a.Verified),
 		entity.NewAccountVerificationAssoc(a.AccountID, accountEntity))
 }
 

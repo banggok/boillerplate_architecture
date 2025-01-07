@@ -23,7 +23,7 @@ func (r *genericRepositoryImpl[E, M]) Count(ctx *gin.Context) (*int64, error) {
 
 	// Count the rows matching the condition
 	var count int64
-	tx = r.getWhere(tx)
+	tx = r.getQuery(tx)
 	if err := tx.Model(new(M)).Count(&count).Error; err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to count rows with given condition")
 	}
@@ -40,7 +40,7 @@ func (r *genericRepositoryImpl[E, M]) Delete(ctx *gin.Context) error {
 	}
 
 	// Perform the delete operation
-	tx = r.getWhere(tx)
+	tx = r.getQuery(tx)
 	if err := tx.Delete(new(M)).Error; err != nil {
 		return custom_errors.New(err, custom_errors.InternalServerError, "failed to delete records from database")
 	}

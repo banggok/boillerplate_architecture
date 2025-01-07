@@ -53,7 +53,7 @@ func New(err error, code ErrorCode, message string, detail ...map[string]string)
 	// Create a new CustomError instance
 	return CustomError{
 		Code:     int(code),
-		Message:  message,
+		Message:  def.Message,
 		HTTPCode: def.HTTPCode,
 		Err:      err,
 		Details:  details,
@@ -77,8 +77,10 @@ const (
 	AccountConflictEntity  ErrorCode = 30409
 	AccountNotFound        ErrorCode = 30404
 
-	AccountVerificationNotFound        ErrorCode = 40404
 	AccountVerificationUnprocessEntity ErrorCode = 40422
+	AccountVerificationBadRequest      ErrorCode = 40400
+	AccountVerificationConflictEntity  ErrorCode = 40409
+	AccountVerificationNotFound        ErrorCode = 40404
 
 	// Add more keys as needed
 )
@@ -91,14 +93,50 @@ var errorDict = map[ErrorCode]CustomError{
 	},
 	TenantUnprocessEntity: {
 		HTTPCode: http.StatusUnprocessableEntity,
+		Message:  "can not process tenant",
 	},
 	TenantBadRequest: {
 		HTTPCode: http.StatusBadRequest,
+		Message:  "invalid tenant request",
 	},
 	TenantConflictEntity: {
 		HTTPCode: http.StatusConflict,
+		Message:  "tenant exists",
 	},
 	TenantNotFound: {
 		HTTPCode: http.StatusNotFound,
+		Message:  "tenant not found",
+	},
+	AccountUnprocessEntity: {
+		HTTPCode: http.StatusUnprocessableEntity,
+		Message:  "can not process account",
+	},
+	AccountBadRequest: {
+		HTTPCode: http.StatusBadRequest,
+		Message:  "invalid account request",
+	},
+	AccountConflictEntity: {
+		HTTPCode: http.StatusConflict,
+		Message:  "account exists",
+	},
+	AccountNotFound: {
+		HTTPCode: http.StatusNotFound,
+		Message:  "account not found",
+	},
+	AccountVerificationUnprocessEntity: {
+		HTTPCode: http.StatusUnprocessableEntity,
+		Message:  "can not process account verification",
+	},
+	AccountVerificationBadRequest: {
+		HTTPCode: http.StatusBadRequest,
+		Message:  "invalid account verification request",
+	},
+	AccountVerificationConflictEntity: {
+		HTTPCode: http.StatusConflict,
+		Message:  "account verification exists",
+	},
+	AccountVerificationNotFound: {
+		HTTPCode: http.StatusNotFound,
+		Message:  "account verification not found",
 	},
 }

@@ -1,23 +1,22 @@
 package register
 
 import (
-	"encoding/json"
-	"io"
 	"net/http"
 	"testing"
 	"time"
 
-	test_register "github.com/banggok/boillerplate_architecture/tests/e2e/helper/request/tenant/register"
-	time_testing_helper "github.com/banggok/boillerplate_architecture/tests/e2e/helper/time"
+	asserthelper "github.com/banggok/boillerplate_architecture/tests/helper/assert_helper"
+	test_register "github.com/banggok/boillerplate_architecture/tests/helper/request/tenant/register"
+	time_testing_helper "github.com/banggok/boillerplate_architecture/tests/helper/time"
 
 	"github.com/banggok/boillerplate_architecture/internal/config/app"
-	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/tenant/register"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/services/tenant"
-	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/response"
-	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/setup"
+	"github.com/banggok/boillerplate_architecture/tests/helper/response"
+	"github.com/banggok/boillerplate_architecture/tests/helper/setup"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gorm.io/gorm"
@@ -50,17 +49,13 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
 
 		// Read and parse the response body
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
 		var responseBody struct {
 			Status  string            `json:"status"`
 			Message string            `json:"message"`
 			Data    register.Response `json:"data"`
 		}
 
-		err = json.Unmarshal(body, &responseBody)
-		require.NoError(t, err)
+		response.GetBodyResponse(t, resp, &responseBody)
 
 		assert.Equal(t, "success", responseBody.Status)
 		assert.Equal(t, "Tenant registered successfully", responseBody.Message)
@@ -72,13 +67,11 @@ func TestTenantRegister(t *testing.T) {
 		}
 
 		// Assert response body structure and values
-		err = time_testing_helper.Sanitize(&responseBody.Data.CreatedAt,
+		time_testing_helper.Sanitize(t, &responseBody.Data.CreatedAt,
 			expectedResponse.CreatedAt)
-		require.NoError(t, err)
 
-		err = time_testing_helper.Sanitize(&responseBody.Data.UpdatedAt,
+		time_testing_helper.Sanitize(t, &responseBody.Data.UpdatedAt,
 			expectedResponse.UpdatedAt)
-		require.NoError(t, err)
 
 		assert.Equal(t, responseBody.Data, expectedResponse)
 		var tenantDB model.Tenant
@@ -122,7 +115,7 @@ func TestTenantRegister(t *testing.T) {
 								UpdatedAt: time.Now(),
 							},
 							AccountID: 1,
-							Type:      string(entity.EMAIL_VERIFICATION),
+							Type:      string(valueobject.EMAIL_VERIFICATION.String()),
 							Token:     (*(*tenantDB.Accounts)[0].AccountVerifications)[0].Token,
 							ExpiresAt: expiresAt,
 							Verified:  false,
@@ -132,52 +125,39 @@ func TestTenantRegister(t *testing.T) {
 			},
 		}
 
-		err = time_testing_helper.Sanitize(&tenantDB.CreatedAt,
+		time_testing_helper.Sanitize(t, &tenantDB.CreatedAt,
 			expectedTenantDB.CreatedAt)
-		require.NoError(t, err)
 
-		err = time_testing_helper.Sanitize(&tenantDB.UpdatedAt,
+		time_testing_helper.Sanitize(t, &tenantDB.UpdatedAt,
 			expectedTenantDB.UpdatedAt)
-		require.NoError(t, err)
 
 		for i := range *expectedTenantDB.Accounts {
 			accountDb := (*tenantDB.Accounts)[i]
 
-			err = time_testing_helper.Sanitize(&accountDb.CreatedAt,
+			time_testing_helper.Sanitize(t, &accountDb.CreatedAt,
 				(*expectedTenantDB.Accounts)[i].CreatedAt)
-			require.NoError(t, err)
 
-			err = time_testing_helper.Sanitize(&accountDb.UpdatedAt,
+			time_testing_helper.Sanitize(t, &accountDb.UpdatedAt,
 				(*expectedTenantDB.Accounts)[i].UpdatedAt)
-			require.NoError(t, err)
 
 			for j := range *accountDb.AccountVerifications {
 				accountVerification := (*accountDb.AccountVerifications)[j]
 
-				err = time_testing_helper.Sanitize(&accountVerification.ExpiresAt,
+				time_testing_helper.Sanitize(t, &accountVerification.ExpiresAt,
 					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].ExpiresAt)
-				require.NoError(t, err)
 
-				err = time_testing_helper.Sanitize(&accountVerification.CreatedAt,
+				time_testing_helper.Sanitize(t, &accountVerification.CreatedAt,
 					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].CreatedAt)
-				require.NoError(t, err)
 
-				err = time_testing_helper.Sanitize(&accountVerification.UpdatedAt,
+				time_testing_helper.Sanitize(t, &accountVerification.UpdatedAt,
 					(*(*expectedTenantDB.Accounts)[i].AccountVerifications)[j].UpdatedAt)
-				require.NoError(t, err)
 
 				(*accountDb.AccountVerifications)[j] = accountVerification
 			}
 			(*tenantDB.Accounts)[i] = accountDb
 		}
 
-		tenantDBJSON, err := json.Marshal(tenantDB)
-		require.NoError(t, err)
-
-		expectedTenantDBJSON, err := json.Marshal(expectedTenantDB)
-		require.NoError(t, err)
-
-		assert.JSONEq(t, string(expectedTenantDBJSON), string(tenantDBJSON), "Tenant data mismatch")
+		asserthelper.AssertStruct(t, tenantDB, expectedTenantDB)
 
 	})
 
@@ -196,26 +176,21 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, http.StatusConflict, resp.StatusCode)
 
 		// Read and parse the response body
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
-		var errorResonse response.ErrorResponse
-
-		err = json.Unmarshal(body, &errorResonse)
-		require.NoError(t, err)
+		var errorResponse response.ErrorResponse
+		response.GetBodyResponse(t, resp, &errorResponse)
 
 		expectedResponse := response.ErrorResponse{
-			RequestID: errorResonse.RequestID,
+			RequestID: errorResponse.RequestID,
 			Status:    "error",
 			Code:      int(custom_errors.TenantConflictEntity),
-			Message:   tenant.TenantDuplicate,
+			Message:   "tenant exists",
 			Details: map[string]string{
 				"error": tenant.TenantDuplicate,
 			},
 		}
 
 		// Assert response body structure and values
-		assert.Equal(t, errorResonse, expectedResponse)
+		assert.Equal(t, errorResponse, expectedResponse)
 	})
 
 	t.Run("Tenant Registration Bad Request (Invalid JSON)", func(t *testing.T) {
@@ -232,19 +207,14 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 		// Read and parse the response body
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
 		var errorResponse response.ErrorResponse
-
-		err = json.Unmarshal(body, &errorResponse)
-		require.NoError(t, err)
+		response.GetBodyResponse(t, resp, &errorResponse)
 
 		expectedResponse := response.ErrorResponse{
 			RequestID: errorResponse.RequestID,
 			Status:    "error",
 			Code:      int(custom_errors.TenantBadRequest),
-			Message:   "invalid tenant register request payload",
+			Message:   "invalid tenant request",
 			Details: map[string]string{
 				"error": "invalid character '}' looking for beginning of object key string",
 			},
@@ -269,19 +239,14 @@ func TestTenantRegister(t *testing.T) {
 		assert.Equal(t, http.StatusUnprocessableEntity, resp.StatusCode)
 
 		// Read and parse the response body
-		body, err := io.ReadAll(resp.Body)
-		require.NoError(t, err)
-
 		var errorResponse response.ErrorResponse
-
-		err = json.Unmarshal(body, &errorResponse)
-		require.NoError(t, err)
+		response.GetBodyResponse(t, resp, &errorResponse)
 
 		expectedResponse := response.ErrorResponse{
 			RequestID: errorResponse.RequestID,
 			Status:    "error",
 			Code:      int(custom_errors.TenantUnprocessEntity),
-			Message:   "failed to validate request payload",
+			Message:   "can not process tenant",
 			Details: map[string]string{
 				"name":         "Name is required.",
 				"account.name": "Account name is required and can only contain letters and spaces.",
@@ -289,6 +254,6 @@ func TestTenantRegister(t *testing.T) {
 		}
 
 		// Assert response body structure and values
-		assert.Equal(t, errorResponse, expectedResponse)
+		assert.Equal(t, expectedResponse, errorResponse)
 	})
 }

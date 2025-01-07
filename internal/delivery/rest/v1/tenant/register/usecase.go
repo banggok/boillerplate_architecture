@@ -3,6 +3,7 @@ package register
 import (
 	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/services/notification/email"
 	"github.com/banggok/boillerplate_architecture/internal/services/tenant"
@@ -22,7 +23,7 @@ type usecaseImpl struct {
 
 // execute implements TenantRegisterUsecase.
 func (t *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Tenant, error) {
-	accountVerification, err := entity.NewAccountVerification(entity.EMAIL_VERIFICATION, nil)
+	accountVerification, err := entity.NewAccountVerification(valueobject.EMAIL_VERIFICATION, nil)
 	if err != nil {
 		return nil, custom_errors.New(
 			err,

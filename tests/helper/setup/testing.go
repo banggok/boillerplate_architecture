@@ -9,6 +9,7 @@ import (
 	"github.com/banggok/boillerplate_architecture/internal/config/db"
 	"github.com/banggok/boillerplate_architecture/internal/config/server"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
+	"github.com/banggok/boillerplate_architecture/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
 )
@@ -20,6 +21,7 @@ func TestingEnv(t *testing.T, useServer bool) (serverEngine *gin.Engine, cleanUp
 
 	// Configure the application to use this DSN
 	app.Setup()
+	services.Setup()
 	app.AppConfig.DBConfig.MasterDSN = dsn
 	app.AppConfig.DBConfig.SlaveDSN = dsn
 	app.AppConfig.DBConfig.Driver = app.SQLiteDriver

@@ -30,9 +30,9 @@ func (r *genericRepositoryImpl[E, M]) GetOne(ctx *gin.Context) (E, error) {
 
 	// Retrieve the model using the condition
 	var model M
-	tx = r.getWhere(tx)
+	tx = r.getQuery(tx)
 	if err := tx.First(&model).Error; err != nil {
-		return entity, custom_errors.New(err, r.notFoundError(model), "failed to find model with given condition")
+		return entity, custom_errors.New(err, r.notFoundError(model), "not found")
 	}
 
 	// Convert model to entity using the model's ToEntity method
@@ -49,7 +49,7 @@ func (r *genericRepositoryImpl[E, M]) GetAll(ctx *gin.Context) (*[]E, error) {
 
 	// Retrieve all models matching the conditions
 	var models []M
-	tx = r.getWhere(tx)
+	tx = r.getQuery(tx)
 	if err := tx.Find(&models).Error; err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to retrieve models from database")
 	}
@@ -85,7 +85,7 @@ func (r *genericRepositoryImpl[E, M]) GetAllWithPagination(ctx *gin.Context, pag
 
 	// Retrieve the total count for the given conditions
 	var total int64
-	tx = r.getWhere(tx)
+	tx = r.getQuery(tx)
 	if err := tx.Model(new(M)).Count(&total).Error; err != nil {
 		return nil, 0, custom_errors.New(err, custom_errors.InternalServerError, "failed to count rows with given conditions")
 	}

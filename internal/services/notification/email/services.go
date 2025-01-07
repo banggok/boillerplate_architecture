@@ -38,7 +38,7 @@ type serviceImpl struct {
 	emailSender EmailSender
 }
 
-func NewService(cfg smtp.Config, sender EmailSender) Service {
+func New(cfg smtp.Config, sender EmailSender) Service {
 	if sender == nil {
 		dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SenderEmail, cfg.AppPassword)
 		sender = &gomailSender{dialer: dialer}

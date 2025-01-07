@@ -5,7 +5,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type condition struct {
+type queryArgs struct {
 	Query string
 	Args  []interface{}
 }
@@ -15,17 +15,82 @@ type GenericRepository[E any, M any] interface {
 	persistRepository[E]
 	retrievalRepository[E, M]
 	countDeleteRepository[E]
+
+	// Where appends a WHERE clause to the repository's query builder.
+	// This allows filtering results based on specific conditions.
+	//
+	// Parameters:
+	//   - query: A string representing the condition for the WHERE clause
+	//     (e.g., "age > ? AND status = ?").
+	//   - args: Optional arguments to bind to the placeholders in the query string.
+	//
+	// Returns:
+	//   - GenericRepository[E, M]: The repository instance with the new WHERE condition appended,
+	//     enabling method chaining.
+	//
+	// Example Usage:
+	//
+	//	repo.Where("age > ?", 30).Where("status = ?", "active")
+	//
+	// Notes:
+	//   - This method is typically used to refine database queries by specifying
+	//     conditions that must be met by the resulting rows.
 	Where(query string, args ...interface{}) GenericRepository[E, M]
+
+	// Joins appends an INNER JOIN clause to the repository's query builder. For LEFT JOIN use Preload().
+	// It allows specifying the join condition as a query string and any associated arguments.
+	//
+	// Parameters:
+	//   - query: A string representing the INNER JOIN condition (e.g., "users ON users.id = orders.user_id").
+	//   - args: Optional arguments to bind to the query string, typically for placeholders (e.g., WHERE conditions).
+	//
+	// Returns:
+	//   - GenericRepository[E, M]: The repository instance with the new join condition appended, allowing method chaining.
+	//
+	// Example Usage:
+	//
+	//	repo.Joins("users ON users.id = orders.user_id").Joins("profiles ON profiles.user_id = users.id")
+	Joins(query string, args ...interface{}) GenericRepository[E, M]
+
+	// Preload appends a preload operation to the repository's query builder.
+	// This allows eager loading of related entities or associations with optional conditions.
+	//
+	// Parameters:
+	//   - query: A string representing the association to preload
+	//     (e.g., "Orders", "Orders.Items").
+	//   - args: Optional arguments for conditions or additional filtering
+	//     applied to the preload operation.
+	//
+	// Returns:
+	//   - GenericRepository[E, M]: The repository instance with the new preload condition appended,
+	//     allowing method chaining.
+	//
+	// Example Usage:
+	//
+	//	// Basic preloading of an association
+	//	repo.Preload("Orders")
+	//
+	//	// Preloading with a condition to filter the associated records
+	//	repo.Preload("Orders", "status = ?", "completed")
+	//
+	// Notes:
+	//   - Preloading is typically used for LEFT JOIN-like behavior, ensuring related entities
+	//     are loaded alongside the main entity in a single query or a sequence of queries.
+	//   - Conditional preloading is useful for reducing the size of the loaded dataset and focusing
+	//     only on relevant related data.
+	Preload(query string, args ...interface{}) GenericRepository[E, M]
 }
 
 // genericRepositoryImpl implements the GenericRepository interface.
 type genericRepositoryImpl[E any, M any] struct {
-	toModel    func(entity E) M
-	conditions []condition
+	toModel func(entity E) M
+	wheres  []queryArgs
+	joins   []queryArgs
+	preload []queryArgs
 }
 
 func (r *genericRepositoryImpl[E, M]) Where(query string, args ...interface{}) GenericRepository[E, M] {
-	r.conditions = append(r.conditions, condition{
+	r.wheres = append(r.wheres, queryArgs{
 		Query: query,
 		Args:  args,
 	})
@@ -33,9 +98,35 @@ func (r *genericRepositoryImpl[E, M]) Where(query string, args ...interface{}) G
 	return r
 }
 
-func (r *genericRepositoryImpl[E, M]) getWhere(tx *gorm.DB) *gorm.DB {
-	for _, condition := range r.conditions {
-		tx = tx.Where(condition.Query, condition.Args...)
+func (r *genericRepositoryImpl[E, M]) Joins(query string, args ...interface{}) GenericRepository[E, M] {
+	r.joins = append(r.joins, queryArgs{
+		Query: query,
+		Args:  args,
+	})
+
+	return r
+}
+
+func (r *genericRepositoryImpl[E, M]) Preload(query string, args ...interface{}) GenericRepository[E, M] {
+	r.preload = append(r.preload, queryArgs{
+		Query: query,
+		Args:  args,
+	})
+
+	return r
+}
+
+func (r *genericRepositoryImpl[E, M]) getQuery(tx *gorm.DB) *gorm.DB {
+	for _, where := range r.wheres {
+		tx = tx.Where(where.Query, where.Args...)
+	}
+
+	for _, join := range r.joins {
+		tx = tx.InnerJoins(join.Query, join.Args...)
+	}
+
+	for _, preload := range r.preload {
+		tx = tx.Preload(preload.Query, preload.Args...)
 	}
 	return tx
 }

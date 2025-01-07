@@ -110,7 +110,7 @@ func (t *tenantCreateService) countEntity(
 	return t.accountRepo.Where(query, args...).Count(ctx)
 }
 
-func NewTenantCreateService(
+func New(
 	tenantRepo repository.GenericRepository[entity.Tenant, model.Tenant],
 	accountRepo repository.GenericRepository[entity.Account, model.Account]) Service {
 	return &tenantCreateService{

@@ -1,7 +1,6 @@
 package repository_test
 
 import (
-	"encoding/json"
 	"errors"
 	"testing"
 
@@ -9,7 +8,8 @@ import (
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
-	"github.com/banggok/boillerplate_architecture/tests/e2e/helper/setup"
+	asserthelper "github.com/banggok/boillerplate_architecture/tests/helper/assert_helper"
+	"github.com/banggok/boillerplate_architecture/tests/helper/setup"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -73,13 +73,7 @@ func TestGetAllWithPagination(t *testing.T) {
 	expectedRes := []entity.Tenant{
 		tenant[0],
 	}
-	expectedResJson, err := json.Marshal(expectedRes)
-	assert.NoError(t, err)
-
-	resJson, err := json.Marshal(res)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expectedResJson), string(resJson))
+	asserthelper.AssertStruct(t, res, expectedRes)
 	assert.Equal(t, int64(2), count)
 	assert.NoError(t, err)
 }
@@ -96,13 +90,8 @@ func TestGetAll(t *testing.T) {
 	res, err := repo.Where("id = ?", tenant[1].ID()).GetAll(ctx)
 	assert.NoError(t, err)
 
-	expectedResJson, err := json.Marshal([]entity.Tenant{tenant[1]})
-	assert.NoError(t, err)
+	asserthelper.AssertStruct(t, res, []entity.Tenant{tenant[1]})
 
-	resJson, err := json.Marshal(res)
-	assert.NoError(t, err)
-
-	assert.JSONEq(t, string(expectedResJson), string(resJson))
 	assert.NoError(t, err)
 }
 
