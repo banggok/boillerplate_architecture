@@ -83,11 +83,49 @@ definitions:
       updated_at:
         type: string
     type: object
+  verify.Response:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      updated_at:
+        type: string
+    type: object
 info:
   contact: {}
   title: Appointment Management System API
   version: "1.0"
 paths:
+  /api/v1/accounts/verify/{token}:
+    get:
+      consumes:
+      - application/json
+      description: Verifies an account using a token provided in the URL path
+      parameters:
+      - description: Verification token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/verify.Response'
+        "400":
+          description: Invalid request payload
+          schema:
+            $ref: '#/definitions/custom_errors.CustomError'
+        "422":
+          description: Failed to verify account
+          schema:
+            $ref: '#/definitions/custom_errors.CustomError'
+      summary: Verify Account
+      tags:
+      - Accounts
   /api/v1/tenants/:
     post:
       consumes:

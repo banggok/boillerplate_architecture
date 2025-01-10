@@ -11,7 +11,7 @@ import (
 )
 
 type IRequest interface {
-	ParseAndValidateRequest(c *gin.Context, binding binding.Binding) error
+	ParseAndValidateRequest(c *gin.Context) error
 }
 
 type RequestParam struct {
@@ -45,7 +45,7 @@ func (b *Base) customValidationMessages(err error, fieldMessages map[string]stri
 
 // ParseAndValidateRequest handles parsing and validating a request.
 func (b *Base) ParseAndValidateRequest(param RequestParam) error {
-	// Parse the incoming JSON request
+	// Parse the incoming request
 	if param.Binding != nil {
 		if err := param.Context.ShouldBindWith(param.Request, param.Binding); err != nil {
 			param.Context.Error(custom_errors.New(

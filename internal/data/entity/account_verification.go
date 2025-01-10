@@ -15,10 +15,20 @@ type AccountVerification interface {
 	AccountID() uint
 	Account() Account
 	VerificationType() valueobject.VerificationType
-	Token() string
+	Token() *string
 	ExpiresAt() time.Time
 	Verified() bool
 	VerifiedSuccess()
+}
+
+var generateToken map[valueobject.VerificationType]bool = map[valueobject.VerificationType]bool{
+	valueobject.EMAIL_VERIFICATION: true,
+	valueobject.RESET_PASSWORD:     false,
+}
+
+var duration map[valueobject.VerificationType]time.Duration = map[valueobject.VerificationType]time.Duration{
+	valueobject.EMAIL_VERIFICATION: app.AppConfig.ExpiredDuration.EmailVerification,
+	valueobject.RESET_PASSWORD:     app.AppConfig.ExpiredDuration.ResetPasswordVerification,
 }
 
 type accountVerificationImpl struct {
@@ -26,7 +36,7 @@ type accountVerificationImpl struct {
 	accountID        uint
 	account          Account
 	verificationType valueobject.VerificationType
-	token            string
+	token            *string
 	expiresAt        time.Time
 	verified         bool
 }
@@ -57,7 +67,7 @@ func (a *accountVerificationImpl) CreatedAt() time.Time {
 }
 
 // Token implements AccountVerification.
-func (a *accountVerificationImpl) Token() string {
+func (a *accountVerificationImpl) Token() *string {
 	return a.token
 }
 
@@ -72,23 +82,23 @@ func (a *accountVerificationImpl) Verified() bool {
 }
 
 type newAccountVerificationParams struct {
-	verificationType valueobject.VerificationType `validate:"required"`
+	VerificationType valueobject.VerificationType `validate:"required,verification_type"`
 }
 
 type accountVerificationData struct {
-	verificationType valueobject.VerificationType `validate:"required"`
-	token            string                       `validate:"required"`
-	expiresAt        time.Time                    `validate:"required"`
-	verified         bool                         `validate:"required"`
+	VerificationType valueobject.VerificationType `validate:"required,verification_type"`
+	Token            *string
+	ExpiresAt        time.Time `validate:"required"`
+	Verified         bool
 }
 
-func NewAccountVerificationData(verificationType valueobject.VerificationType, token string,
+func NewAccountVerificationData(verificationType valueobject.VerificationType, token *string,
 	expiresAt time.Time, verified bool) accountVerificationData {
 	return accountVerificationData{
-		verificationType: verificationType,
-		token:            token,
-		expiresAt:        expiresAt,
-		verified:         verified,
+		VerificationType: verificationType,
+		Token:            token,
+		ExpiresAt:        expiresAt,
+		Verified:         verified,
 	}
 }
 
@@ -99,14 +109,14 @@ type makeAccountVerificationParams struct {
 }
 
 type accountVerificationAssoc struct {
-	accountID uint `validate:"required"`
-	account   Account
+	AccountID uint `validate:"required"`
+	Account   Account
 }
 
 func NewAccountVerificationAssoc(accountID uint, account Account) accountVerificationAssoc {
 	return accountVerificationAssoc{
-		accountID: accountID,
-		account:   account,
+		AccountID: accountID,
+		Account:   account,
 	}
 }
 
@@ -125,7 +135,7 @@ func MakeAccountVerification(metadata metadata, verificationData accountVerifica
 			"failed to validate new account verification entity")
 	}
 
-	if assoc.account != nil && assoc.accountID != assoc.account.ID() {
+	if assoc.Account != nil && assoc.AccountID != assoc.Account.ID() {
 		return nil, custom_errors.New(
 			nil,
 			custom_errors.AccountVerificationUnprocessEntity,
@@ -134,16 +144,16 @@ func MakeAccountVerification(metadata metadata, verificationData accountVerifica
 
 	res = &accountVerificationImpl{
 		entity: entity{
-			id:        param.id,
-			createdAt: param.createdAt,
-			updatedAt: param.updatedAt,
+			id:        param.ID,
+			createdAt: param.CreatedAt,
+			updatedAt: param.UpdatedAt,
 		},
-		accountID:        param.accountID,
-		account:          assoc.account,
-		verificationType: param.verificationType,
-		token:            param.token,
-		expiresAt:        param.expiresAt,
-		verified:         param.verified,
+		accountID:        param.AccountID,
+		account:          assoc.Account,
+		verificationType: param.VerificationType,
+		token:            param.Token,
+		expiresAt:        param.ExpiresAt,
+		verified:         param.Verified,
 	}
 
 	return res, nil
@@ -153,7 +163,7 @@ func NewAccountVerification(verificationType valueobject.VerificationType,
 	account Account) (AccountVerification, error) {
 	var res *accountVerificationImpl
 	param := newAccountVerificationParams{
-		verificationType: verificationType,
+		VerificationType: verificationType,
 	}
 
 	if err := validator.Validate.Struct(param); err != nil {
@@ -164,18 +174,21 @@ func NewAccountVerification(verificationType valueobject.VerificationType,
 	}
 
 	res = &accountVerificationImpl{
-		verificationType: param.verificationType,
+		verificationType: param.VerificationType,
 		account:          account,
 	}
 
-	token, err := password.GeneratePassword(16)
-	if err != nil || token == nil {
-		return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to generate password")
+	if generateToken[verificationType] {
+		token, err := password.GeneratePassword(16)
+		if err != nil || token == nil {
+			return nil, custom_errors.New(err, custom_errors.InternalServerError, "failed to generate password")
+		}
+
+		res.token = token
+
 	}
 
-	res.token = *token
-	expiredDuration := app.AppConfig.ExpiredDuration.EmailVerification
-	res.expiresAt = time.Now().UTC().Add(expiredDuration)
+	res.expiresAt = time.Now().UTC().Add(duration[verificationType])
 
 	if account != nil {
 		res.accountID = account.ID()

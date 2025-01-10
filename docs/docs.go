@@ -15,6 +15,50 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/accounts/verify/{token}": {
+            "get": {
+                "description": "Verifies an account using a token provided in the URL path",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Accounts"
+                ],
+                "summary": "Verify Account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Verification token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/verify.Response"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request payload",
+                        "schema": {
+                            "$ref": "#/definitions/custom_errors.CustomError"
+                        }
+                    },
+                    "422": {
+                        "description": "Failed to verify account",
+                        "schema": {
+                            "$ref": "#/definitions/custom_errors.CustomError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/tenants/": {
             "post": {
                 "description": "register a new tenant in the system",
@@ -165,6 +209,20 @@ const docTemplate = `{
             }
         },
         "register.Response": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "verify.Response": {
             "type": "object",
             "properties": {
                 "created_at": {

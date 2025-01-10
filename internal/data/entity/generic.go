@@ -26,15 +26,15 @@ func (a *entity) UpdatedAt() time.Time {
 }
 
 type metadata struct {
-	id        uint      `validate:"required"`
-	createdAt time.Time `validate:"required"`
-	updatedAt time.Time `validate:"required"`
+	ID        uint      `validate:"required"`
+	CreatedAt time.Time `validate:"required"`
+	UpdatedAt time.Time `validate:"required"`
 }
 
 func NewMetadata(id uint, createdAt, updatedAt time.Time) metadata {
 	return metadata{
-		id:        id,
-		createdAt: createdAt,
-		updatedAt: updatedAt,
+		ID:        id,
+		CreatedAt: createdAt,
+		UpdatedAt: updatedAt,
 	}
 }

@@ -20,9 +20,9 @@ type Account interface {
 
 type accountImpl struct {
 	entity
-	name                 string `validate:"required,alpha_space" example:"John Doe"`
-	email                string `validate:"required,email" example:"admin@example.com"`
-	phone                string `validate:"omitempty,e164" example:"+1234567890"`
+	name                 string
+	email                string
+	phone                string
 	password             string
 	tenantId             uint
 	tenant               Tenant
@@ -35,42 +35,43 @@ func (a *accountImpl) AccountVerifications() *[]AccountVerification {
 }
 
 type accountIdentity struct {
-	name     string  `validate:"required,alpha_space" example:"John Doe"`
-	email    string  `validate:"required,email" example:"admin@example.com"`
-	phone    string  `validate:"omitempty,e164" example:"+1234567890"`
-	password *string `validate:"required"`
+	Name     string `validate:"required,alpha_space" example:"John Doe"`
+	Email    string `validate:"required,email" example:"admin@example.com"`
+	Phone    string `validate:"omitempty,e164" example:"+1234567890"`
+	Password *string
 }
 
 func NewAccountIdentity(name, email, phone string, password *string) accountIdentity {
 	return accountIdentity{
-		name:     name,
-		email:    email,
-		phone:    phone,
-		password: password,
+		Name:     name,
+		Email:    email,
+		Phone:    phone,
+		Password: password,
 	}
 }
 
 type accountTenant struct {
-	tenantId uint
-	tenant   Tenant
+	TenantID uint
+	Tenant   Tenant
 }
 
 func NewAccountTenant(tenantId uint, tenant Tenant) accountTenant {
 	return accountTenant{
-		tenantId: tenantId,
-		tenant:   tenant,
+		TenantID: tenantId,
+		Tenant:   tenant,
 	}
 }
 
 type newAccountParams struct {
 	accountIdentity
-	tenant Tenant
+	Tenant Tenant
 }
 
 type makeAccountParams struct {
 	metadata
 	accountIdentity
 	accountTenant
+	Password string `validate:"required"`
 }
 
 func MakeAccount(
@@ -78,10 +79,15 @@ func MakeAccount(
 	accountIdentity accountIdentity,
 	accountTenant accountTenant,
 	accountVerifications *[]AccountVerification) (Account, error) {
+	var password string
+	if accountIdentity.Password != nil {
+		password = *accountIdentity.Password
+	}
 	params := makeAccountParams{
 		metadata:        metadata,
 		accountIdentity: accountIdentity,
 		accountTenant:   accountTenant,
+		Password:        password,
 	}
 	if err := validator.Validate.Struct(params); err != nil {
 		return nil, custom_errors.New(
@@ -92,16 +98,16 @@ func MakeAccount(
 
 	return &accountImpl{
 		entity: entity{
-			id:        params.id,
-			createdAt: params.createdAt,
-			updatedAt: params.updatedAt,
+			id:        params.ID,
+			createdAt: params.CreatedAt,
+			updatedAt: params.UpdatedAt,
 		},
-		name:                 params.name,
-		email:                params.email,
-		phone:                params.phone,
-		tenantId:             params.tenantId,
-		tenant:               params.tenant,
-		password:             *params.password,
+		name:                 params.Name,
+		email:                params.Email,
+		phone:                params.Phone,
+		tenantId:             params.TenantID,
+		tenant:               params.Tenant,
+		password:             params.Password,
 		accountVerifications: accountVerifications,
 	}, nil
 }
@@ -109,7 +115,7 @@ func MakeAccount(
 func NewAccount(accountIdentity accountIdentity, tenant Tenant, accountVerifications *[]AccountVerification) (Account, *string, error) {
 	params := newAccountParams{
 		accountIdentity: accountIdentity,
-		tenant:          tenant,
+		Tenant:          tenant,
 	}
 	if err := validator.Validate.Struct(params); err != nil {
 		return nil, nil, custom_errors.New(
@@ -129,16 +135,16 @@ func NewAccount(accountIdentity accountIdentity, tenant Tenant, accountVerificat
 	}
 
 	account := accountImpl{
-		name:                 params.name,
-		email:                params.email,
-		phone:                params.phone,
+		name:                 params.Name,
+		email:                params.Email,
+		phone:                params.Phone,
 		password:             *hashed,
 		accountVerifications: accountVerifications,
 	}
 
-	if params.tenant != nil {
-		account.tenantId = params.tenant.ID()
-		account.tenant = params.tenant
+	if params.Tenant != nil {
+		account.tenantId = params.Tenant.ID()
+		account.tenant = params.Tenant
 	}
 
 	return &account, plain, nil

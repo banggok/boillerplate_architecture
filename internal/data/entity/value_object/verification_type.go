@@ -1,17 +1,17 @@
 package valueobject
 
-import "fmt"
-
 type VerificationType string
 
 const (
 	EMAIL_VERIFICATION VerificationType = "email"
+	RESET_PASSWORD     VerificationType = "reset_password"
 )
 
 // AllVerificationTypes returns all valid verification types.
 func AllVerificationTypes() []VerificationType {
 	return []VerificationType{
 		EMAIL_VERIFICATION,
+		RESET_PASSWORD,
 	}
 }
 
@@ -28,14 +28,4 @@ func (v VerificationType) IsValid() bool {
 // String returns the string representation of the VerificationType.
 func (v VerificationType) String() string {
 	return string(v)
-}
-
-// ParseVerificationType parses a string into a VerificationType, returning an error if invalid.
-func ParseVerificationType(value string) (VerificationType, error) {
-	for _, validType := range AllVerificationTypes() {
-		if value == string(validType) {
-			return validType, nil
-		}
-	}
-	return "", fmt.Errorf("invalid verification type: %s", value)
 }

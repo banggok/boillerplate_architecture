@@ -7,13 +7,13 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func CallGetAccountVerify(t *testing.T, token string, server *gin.Engine) http.Response {
 
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("/api/v1/accounts/verify/%s", token), nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	req.Header.Set("Content-Type", "application/json")
 
 	recorder := httptest.NewRecorder()

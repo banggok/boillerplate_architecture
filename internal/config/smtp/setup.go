@@ -1,20 +1,21 @@
 package smtp
 
-import "github.com/banggok/boillerplate_architecture/internal/config"
+import env "github.com/banggok/boillerplate_architecture/internal/config"
 
-type Config struct {
+type config struct {
 	SmtpHost    string
 	SmtpPort    int
 	SenderEmail string
 	AppPassword string
 }
 
-func Setup() Config {
-	return Config{
-		SmtpHost:    config.GetConfigValue("SMTP_HOST", "smtp.gmail.com"),
-		SmtpPort:    config.GetConfigValueAsInt("SMTP_PORT", 587),
-		SenderEmail: config.GetConfigValue("SMTP_EMAIL", ""),
-		// AppPassword: config.GetConfigValue("SMTP_PASSWORD", "kafs gbko qmkc bxan"),
-		AppPassword: config.GetConfigValue("SMTP_PASSWORD", ""),
+var Config config
+
+func init() {
+	Config = config{
+		SmtpHost:    env.GetConfigValue("SMTP_HOST", "smtp.gmail.com"),
+		SmtpPort:    env.GetConfigValueAsInt("SMTP_PORT", 587),
+		SenderEmail: env.GetConfigValue("SMTP_EMAIL", ""),
+		AppPassword: env.GetConfigValue("SMTP_PASSWORD", ""),
 	}
 }

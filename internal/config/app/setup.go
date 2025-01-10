@@ -2,14 +2,9 @@ package app
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/banggok/boillerplate_architecture/internal/config"
-	"github.com/banggok/boillerplate_architecture/internal/config/smtp"
-	"github.com/banggok/boillerplate_architecture/internal/config/validator"
-	"github.com/joho/godotenv"
-	log "github.com/sirupsen/logrus"
 )
 
 var AppConfig appConfig
@@ -26,19 +21,19 @@ const (
 )
 
 type appConfig struct {
+	BaseUrl          string
 	Port             string
 	CORSAllowOrigins string
 	RateLimit        int
 	GracefulShutdown time.Duration
 	DBConfig         DBConfig
 	Environment      Environment
-	SMTP             smtp.Config
 	ExpiredDuration  ExpiredDuration
 }
 
 type ExpiredDuration struct {
-	EmailVerification    time.Duration
-	WhatsappVerification time.Duration
+	EmailVerification         time.Duration
+	ResetPasswordVerification time.Duration
 }
 
 type EnvPoolConfig struct {
@@ -49,7 +44,7 @@ type EnvPoolConfig struct {
 type PoolConfig struct {
 	MaxOpenConns int
 	MaxIdleConns int
-	MaxLifetime  int
+	MaxLifetime  time.Duration
 }
 
 // SupportedDriver defines the type of database driver
@@ -68,19 +63,9 @@ type DBConfig struct {
 }
 
 func init() {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Warn("No .env file found or unable to load")
-	}
-}
-
-func Setup() {
-	setupLogging()
-	setTimezone()
-	validator.Setup()
 	environment := getConfigValue("ENVIRONMENT", string(ENV_DEV))
 	AppConfig = appConfig{
+		BaseUrl:          getConfigValue("BASE_URL", "http://localhost"),
 		Port:             getConfigValue("HTTP_PORT", "8080"),
 		CORSAllowOrigins: getConfigValue("CORS_ALLOW_ORIGINS", "*"),
 		RateLimit:        getConfigValueAsInt("RATE_LIMIT", 100),
@@ -95,10 +80,9 @@ func Setup() {
 			Driver: MySQLDriver,
 		},
 		Environment: Environment(environment),
-		SMTP:        smtp.Setup(),
 		ExpiredDuration: ExpiredDuration{
-			EmailVerification:    time.Duration(getConfigValueAsInt("EMAIL_VERIFICATION_EXPIRED", 24)) * time.Hour,
-			WhatsappVerification: time.Duration(getConfigValueAsInt("WHATSAPP_VERIFICATION_EXPIRED", 24)) * time.Hour,
+			EmailVerification:         time.Duration(getConfigValueAsInt("EMAIL_VERIFICATION_EXPIRED", 24)) * time.Hour,
+			ResetPasswordVerification: time.Duration(getConfigValueAsInt("RESET_PASSWORD_EXPIRED", 90)) * 24 * time.Hour,
 		},
 	}
 
@@ -109,7 +93,7 @@ func getPoolConfig(label string) PoolConfig {
 	return PoolConfig{
 		MaxOpenConns: getConfigValueAsInt(fmt.Sprintf("DB_%s_MAX_OPEN_CONNS", label), 100),
 		MaxIdleConns: getConfigValueAsInt(fmt.Sprintf("DB_%s_MAX_IDLE_CONNS", label), 10),
-		MaxLifetime:  getConfigValueAsInt(fmt.Sprintf("DB_%s_CONN_MAX_LIFETIME", label), 30),
+		MaxLifetime:  time.Duration(getConfigValueAsInt(fmt.Sprintf("DB_%s_CONN_MAX_LIFETIME", label), 30)) * time.Minute,
 	}
 }
 
@@ -120,15 +104,4 @@ func getDSN(role string) string {
 	password := getConfigValue(fmt.Sprintf("DB_%s_PASSWORD", role), "password")
 	dbName := getConfigValue(fmt.Sprintf("DB_%s_NAME", role), "appointment_management")
 	return fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", user, password, host, port, dbName)
-}
-
-// SetupLogging configures the logrus logging format and level.
-func setupLogging() {
-	log.SetFormatter(&log.JSONFormatter{})
-	log.SetLevel(log.InfoLevel)
-}
-
-// SetTimezone sets the application's default timezone.
-func setTimezone() {
-	os.Setenv("TZ", "UTC")
 }

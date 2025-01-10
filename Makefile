@@ -29,7 +29,8 @@ else
 endif
 
 code-review:
-	go test ./tests/... -coverpkg=./internal/... -coverprofile=coverage.out && \
+	go clean -testcache
+	go test -race ./tests/... -coverpkg=./internal/... -coverprofile=coverage.out && \
 	go tool cover -func=coverage.out > coverage.txt && \
 	go tool cover -html=coverage.out -o coverage.html
 

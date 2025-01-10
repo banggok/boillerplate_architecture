@@ -5,7 +5,6 @@ import (
 
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/gin-gonic/gin"
-	"github.com/gin-gonic/gin/binding"
 )
 
 // handler represents the HTTP handler for tenant-related operations
@@ -41,7 +40,7 @@ func (h *handlerImpl) register(c *gin.Context) {
 	request := Request{}
 
 	// Parse and validate the request payload
-	if err := request.ParseAndValidateRequest(c, binding.JSON); err != nil {
+	if err := request.ParseAndValidateRequest(c); err != nil {
 		return
 	}
 

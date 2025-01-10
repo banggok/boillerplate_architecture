@@ -81,9 +81,9 @@ func Setup() (*DBConnection, func(*DBConnection), error) {
 
 func configureConnectionPool(sqlDB *sql.DB, cfg app.PoolConfig, label string) {
 	// Apply the connection pool configurations
-	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)                                // Maximum number of open connections
-	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)                                // Maximum number of idle connections
-	sqlDB.SetConnMaxLifetime(time.Duration(cfg.MaxLifetime) * time.Minute) // Connection max lifetime
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)   // Maximum number of open connections
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)   // Maximum number of idle connections
+	sqlDB.SetConnMaxLifetime(cfg.MaxLifetime) // Connection max lifetime
 
 	log.Infof("Database connection pool configured for %s: maxOpenConns=%d, maxIdleConns=%d, connMaxLifetime=%dm",
 		label, cfg.MaxOpenConns, cfg.MaxIdleConns, cfg.MaxLifetime)

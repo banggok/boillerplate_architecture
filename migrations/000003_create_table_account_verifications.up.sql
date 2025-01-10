@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS account_verifications (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,                -- Primary key
     account_id BIGINT NOT NULL,                          -- Foreign key referencing accounts
     type VARCHAR(50) NOT NULL,                           -- Type of verification (e.g., 'email', 'phone', '2fa', etc.)
-    token VARCHAR(255) NOT NULL UNIQUE,                  -- Unique token or OTP (hash if sensitive)
+    token VARCHAR(255) NULL UNIQUE,                  -- Unique token or OTP (hash if sensitive)
     expires_at TIMESTAMP NOT NULL,                       -- Expiration timestamp
     verified BOOLEAN DEFAULT FALSE,                      -- Verification status
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,      -- Record creation timestamp

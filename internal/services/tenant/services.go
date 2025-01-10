@@ -1,6 +1,8 @@
 package tenant
 
 import (
+	"sync"
+
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
@@ -36,7 +38,7 @@ func (t *tenantCreateService) Create(ctx *gin.Context, tenant *entity.Tenant) er
 func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.Tenant) error {
 	eg := new(errgroup.Group)
 
-	counts := make(map[string]*int64)
+	counts := sync.Map{} // Thread-safe map
 	queries := []struct {
 		key   string
 		repo  string
@@ -69,14 +71,21 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 		},
 	}
 
+	var mu sync.Mutex // Declare a mutex for synchronizing shared resources
+
 	for _, query := range queries {
 		q := query
 		eg.Go(func() error {
+			// Lock before accessing shared resources, if any
+			mu.Lock()
+			defer mu.Unlock()
 			var err error
-			counts[q.key], err = t.countEntity(ctx, q.repo, q.query, q.args)
+			count, err := t.countEntity(ctx, q.repo, q.query, q.args)
 			if err != nil {
 				return custom_errors.New(err, custom_errors.InternalServerError, "failed to count "+q.key)
 			}
+			// Store count in sync.Map
+			counts.Store(q.key, count)
 			return nil
 		})
 	}
@@ -85,14 +94,14 @@ func (t *tenantCreateService) validateExistence(ctx *gin.Context, tenant entity.
 		return custom_errors.New(err, custom_errors.InternalServerError, "failed to validate tenant existence")
 	}
 
-	if counts["countPhone"] == nil || counts["countEmail"] == nil ||
-		counts["countAccountPhone"] == nil || counts["countAccountEmail"] == nil {
-		return custom_errors.New(nil, custom_errors.InternalServerError, "failed to validate tenant existence")
-	}
-
-	if *counts["countPhone"] > 0 || *counts["countEmail"] > 0 ||
-		*counts["countAccountPhone"] > 0 || *counts["countAccountEmail"] > 0 {
-		return custom_errors.New(nil, custom_errors.TenantConflictEntity, TenantDuplicate)
+	// Validate counts
+	requiredKeys := []string{"countPhone", "countEmail", "countAccountPhone", "countAccountEmail"}
+	for _, key := range requiredKeys {
+		if v, ok := counts.Load(key); !ok || v == nil {
+			return custom_errors.New(nil, custom_errors.InternalServerError, "failed to validate tenant existence")
+		} else if count := v.(*int64); count != nil && *count > 0 {
+			return custom_errors.New(nil, custom_errors.TenantConflictEntity, TenantDuplicate)
+		}
 	}
 
 	return nil

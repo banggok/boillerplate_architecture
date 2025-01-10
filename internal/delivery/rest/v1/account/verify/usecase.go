@@ -1,8 +1,11 @@
 package verify
 
 import (
+	"time"
+
 	eventconfig "github.com/banggok/boillerplate_architecture/internal/config/event"
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/event"
 	accountverification "github.com/banggok/boillerplate_architecture/internal/services/account_verification"
@@ -17,11 +20,19 @@ type usecaseImpl struct {
 	service accountverification.Service
 }
 
+var topicName = map[valueobject.VerificationType]event.EventTopic{
+	valueobject.EMAIL_VERIFICATION: eventconfig.VERIFICATION_SUCCESS,
+}
+
 // Execute implements usecase.
 func (u *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Account, error) {
 	accountVerification, err := u.service.GetByTokenVerification(ctx, request.Token)
 	if err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "token invalid")
+	}
+
+	if accountVerification.ExpiresAt().Before(time.Now()) {
+		return nil, custom_errors.New(nil, custom_errors.AccountVerificationUnprocessEntity, "token expired")
 	}
 
 	if accountVerification == nil || accountVerification.Account() == nil {
@@ -38,9 +49,9 @@ func (u *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Account
 	// Publish the event
 	go func() {
 		eventconfig.EventBus.Publish(event.Event{
-			Name:     eventconfig.EMAIL_VERIFICATION_SUCCESS, // Topic of the event
-			Data:     &accountVerification,                   // Data to send with the event
-			Response: responseChannel,                        // Channel to get the response
+			Name:     topicName[accountVerification.VerificationType()], // Topic of the event
+			Data:     &accountVerification,                              // Data to send with the event
+			Response: responseChannel,                                   // Channel to get the response
 		})
 	}()
 

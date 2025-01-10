@@ -21,6 +21,8 @@ type Request struct {
 	Account      Account `json:"account" validate:"required"`                                     // Admin user details
 }
 
+var _ request.IRequest = &Request{}
+
 type Account struct {
 	Name  string `json:"name" validate:"required,alpha_space" example:"John Doe"`     // Admin's name
 	Email string `json:"email" validate:"required,email" example:"admin@example.com"` // Admin's email
@@ -55,11 +57,11 @@ var fieldKeys = map[string]string{
 
 // ParseAndValidateRequest implements request.IRequest.
 // Subtle: this method shadows the method (BaseRequest).ParseAndValidateRequest of Request.BaseRequest.
-func (r *Request) ParseAndValidateRequest(c *gin.Context, binding binding.Binding) error {
+func (r *Request) ParseAndValidateRequest(c *gin.Context) error {
 	return r.Base.ParseAndValidateRequest(request.RequestParam{
 		Context:                  c,
 		Request:                  r,
-		Binding:                  binding,
+		Binding:                  binding.JSON,
 		FieldMessages:            fieldMessages,
 		FieldKeys:                fieldKeys,
 		BadRequestErrorCode:      custom_errors.TenantBadRequest,

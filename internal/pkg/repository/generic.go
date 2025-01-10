@@ -41,7 +41,7 @@ type GenericRepository[E any, M any] interface {
 	// It allows specifying the join condition as a query string and any associated arguments.
 	//
 	// Parameters:
-	//   - query: A string representing the INNER JOIN condition (e.g., "users ON users.id = orders.user_id").
+	//   - query: A string representing the INNER JOIN condition (e.g., "JOIN users ON users.id = orders.user_id").
 	//   - args: Optional arguments to bind to the query string, typically for placeholders (e.g., WHERE conditions).
 	//
 	// Returns:
@@ -49,8 +49,10 @@ type GenericRepository[E any, M any] interface {
 	//
 	// Example Usage:
 	//
-	//	repo.Joins("users ON users.id = orders.user_id").Joins("profiles ON profiles.user_id = users.id")
-	Joins(query string, args ...interface{}) GenericRepository[E, M]
+	//	repo.Joins("Account")
+	//	repo.Joins("JOIN emails ON emails.user_id = users.id AND emails.email = ?", "jinzhu@example.org")
+	//	repo.Joins("Account").Where("user_id = users.id AND name = ?", "someName")
+	// Joins(query string, args ...interface{}) GenericRepository[E, M]
 
 	// Preload appends a preload operation to the repository's query builder.
 	// This allows eager loading of related entities or associations with optional conditions.
@@ -83,6 +85,7 @@ type GenericRepository[E any, M any] interface {
 
 // genericRepositoryImpl implements the GenericRepository interface.
 type genericRepositoryImpl[E any, M any] struct {
+	// mu      sync.Mutex // Mutex for synchronizing access
 	toModel func(entity E) M
 	wheres  []queryArgs
 	joins   []queryArgs
@@ -90,6 +93,8 @@ type genericRepositoryImpl[E any, M any] struct {
 }
 
 func (r *genericRepositoryImpl[E, M]) Where(query string, args ...interface{}) GenericRepository[E, M] {
+	// r.mu.Lock()
+	// defer r.mu.Unlock()
 	r.wheres = append(r.wheres, queryArgs{
 		Query: query,
 		Args:  args,
@@ -98,16 +103,22 @@ func (r *genericRepositoryImpl[E, M]) Where(query string, args ...interface{}) G
 	return r
 }
 
-func (r *genericRepositoryImpl[E, M]) Joins(query string, args ...interface{}) GenericRepository[E, M] {
-	r.joins = append(r.joins, queryArgs{
-		Query: query,
-		Args:  args,
-	})
+// func (r *genericRepositoryImpl[E, M]) Joins(query string, args ...interface{}) GenericRepository[E, M] {
+// r.mu.Lock()
+// defer r.mu.Unlock()
 
-	return r
-}
+// 	r.joins = append(r.joins, queryArgs{
+// 		Query: query,
+// 		Args:  args,
+// 	})
+
+// 	return r
+// }
 
 func (r *genericRepositoryImpl[E, M]) Preload(query string, args ...interface{}) GenericRepository[E, M] {
+	// r.mu.Lock()
+	// defer r.mu.Unlock()
+
 	r.preload = append(r.preload, queryArgs{
 		Query: query,
 		Args:  args,
@@ -117,12 +128,14 @@ func (r *genericRepositoryImpl[E, M]) Preload(query string, args ...interface{})
 }
 
 func (r *genericRepositoryImpl[E, M]) getQuery(tx *gorm.DB) *gorm.DB {
+	// r.mu.Lock()
+	// defer r.mu.Unlock()
 	for _, where := range r.wheres {
 		tx = tx.Where(where.Query, where.Args...)
 	}
 
 	for _, join := range r.joins {
-		tx = tx.InnerJoins(join.Query, join.Args...)
+		tx = tx.Joins(join.Query, join.Args...)
 	}
 
 	for _, preload := range r.preload {

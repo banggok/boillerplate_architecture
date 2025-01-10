@@ -38,7 +38,8 @@ type serviceImpl struct {
 	emailSender EmailSender
 }
 
-func New(cfg smtp.Config, sender EmailSender) Service {
+func New(sender EmailSender) Service {
+	cfg := smtp.Config
 	if sender == nil {
 		dialer := gomail.NewDialer(cfg.SmtpHost, cfg.SmtpPort, cfg.SenderEmail, cfg.AppPassword)
 		sender = &gomailSender{dialer: dialer}
@@ -52,10 +53,10 @@ func New(cfg smtp.Config, sender EmailSender) Service {
 }
 
 type WelcomeData struct {
-	TenantName string
-	Username   string
-	Password   string
-	LoginURL   string
+	TenantName      string
+	Username        string
+	Password        string
+	VerificationURL string
 }
 
 // SendWelcomeEmail implements Service.

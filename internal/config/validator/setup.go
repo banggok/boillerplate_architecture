@@ -5,13 +5,14 @@ import (
 	"time"
 	"unicode"
 
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/go-playground/validator/v10"
 )
 
 var Validate *validator.Validate
 
 // Setup initializes the validator and registers custom rules.
-func Setup() {
+func init() {
 	validate := validator.New()
 
 	// Register custom validation rules
@@ -40,6 +41,16 @@ func Setup() {
 		return true
 	}); err != nil {
 		log.Fatalf("Failed to register alpha_space validation: %v", err)
+	}
+
+	// Register verification_type validation rule
+	if err := validate.RegisterValidation("verification_type", func(fl validator.FieldLevel) bool {
+		// Convert the field value to a VerificationType
+		verificationType := valueobject.VerificationType(fl.Field().String())
+		// Check if the verification type is valid
+		return verificationType.IsValid()
+	}); err != nil {
+		log.Fatalf("Failed to register verification_type validation: %v", err)
 	}
 
 	Validate = validate

@@ -21,7 +21,9 @@ import (
 )
 
 func main() {
-	app.Setup()
+	os.Setenv("TZ", "UTC")
+	log.SetFormatter(&log.JSONFormatter{})
+	log.SetLevel(log.InfoLevel)
 	services.Setup()
 
 	mysqlCfg, cleanUp, err := db.Setup()

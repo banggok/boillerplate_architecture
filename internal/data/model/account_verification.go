@@ -15,10 +15,10 @@ type AccountVerification struct {
 	Metadata
 	AccountID uint `gorm:"not null;index"` // Foreign key referencing accounts
 	Account   *Account
-	Type      string    `gorm:"size:50;not null"`         // Type of verification (e.g., email, phone, etc.)
-	Token     string    `gorm:"size:255;unique;not null"` // Unique token for verification
-	ExpiresAt time.Time `gorm:"not null"`                 // Expiration timestamp
-	Verified  bool      `gorm:"default:false"`            // Verification status
+	Type      string    `gorm:"size:50;not null"` // Type of verification (e.g., email, phone, etc.)
+	Token     *string   `gorm:"size:255;unique;"` // Unique token for verification
+	ExpiresAt time.Time `gorm:"not null"`         // Expiration timestamp
+	Verified  bool      `gorm:"default:false"`    // Verification status
 }
 
 // TableName specifies the custom table name for GORM
@@ -41,13 +41,9 @@ func (a *AccountVerification) ToEntity() (entity.AccountVerification, error) {
 		}
 	}
 
-	verificationType, err := valueobject.ParseVerificationType(a.Type)
-	if err != nil {
-		return nil, custom_errors.New(err, custom_errors.InternalServerError, "model AccountVerification.Type invalid")
-	}
 	return entity.MakeAccountVerification(
 		entity.NewMetadata(a.ID, a.CreatedAt, a.UpdatedAt),
-		entity.NewAccountVerificationData(verificationType, a.Token, a.ExpiresAt, a.Verified),
+		entity.NewAccountVerificationData(valueobject.VerificationType(a.Type), a.Token, a.ExpiresAt, a.Verified),
 		entity.NewAccountVerificationAssoc(a.AccountID, accountEntity))
 }
 

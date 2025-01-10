@@ -19,50 +19,50 @@ type Tenant interface {
 
 type tenantImpl struct {
 	entity
-	name         string `validate:"required"`              // Tenant's name (required, no strict restrictions)
-	address      string `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
-	email        string `validate:"required,email"`        // Tenant's contact email (required)
-	phone        string `validate:"omitempty,e164"`        // Tenant's phone number (optional)
-	timezone     string `validate:"required,iana_tz"`      // Tenant's timezone (required, IANA format)
-	openingHours string `validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
-	closingHours string `validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
+	name         string // Tenant's name (required, no strict restrictions)
+	address      string // Optional, with a maximum of 255 characters
+	email        string // Tenant's contact email (required)
+	phone        string // Tenant's phone number (optional)
+	timezone     string // Tenant's timezone (required, IANA format)
+	openingHours string // Tenant's opening hours in HH:mm format (optional)
+	closingHours string // Tenant's closing hours in HH:mm format (optional)
 	accounts     *[]Account
 }
 
 type tenantIdentity struct {
-	name  string `validate:"required"`       // Tenant's name (required, no strict restrictions)
-	email string `validate:"required,email"` // Tenant's contact email (required)
-	phone string `validate:"omitempty,e164"` // Tenant's phone number (optional)
+	Name  string `validate:"required"`       // Tenant's name (required, no strict restrictions)
+	Email string `validate:"required,email"` // Tenant's contact email (required)
+	Phone string `validate:"omitempty,e164"` // Tenant's phone number (optional)
 }
 
 func NewTenantIdentity(name, email, phone string) tenantIdentity {
 	return tenantIdentity{
-		name:  name,
-		email: email,
-		phone: phone,
+		Name:  name,
+		Email: email,
+		Phone: phone,
 	}
 }
 
 type tenantStoreInfo struct {
-	address      string `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
-	timezone     string `validate:"required,iana_tz"`      // Tenant's timezone (required, IANA format)
-	openingHours string `validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
-	closingHours string `validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
+	Address      string `validate:"omitempty,max=255"`     // Optional, with a maximum of 255 characters
+	Timezone     string `validate:"required,iana_tz"`      // Tenant's timezone (required, IANA format)
+	OpeningHours string `validate:"omitempty,time_format"` // Tenant's opening hours in HH:mm format (optional)
+	ClosingHours string `validate:"omitempty,time_format"` // Tenant's closing hours in HH:mm format (optional)
 }
 
 func NewTenantStoreInfo(address, timezone, openingHours, closingHours string) tenantStoreInfo {
 	return tenantStoreInfo{
-		address:      address,
-		timezone:     timezone,
-		openingHours: openingHours,
-		closingHours: closingHours,
+		Address:      address,
+		Timezone:     timezone,
+		OpeningHours: openingHours,
+		ClosingHours: closingHours,
 	}
 }
 
 type newTenantParams struct {
 	tenantIdentity
 	tenantStoreInfo
-	accounts *[]Account
+	Accounts *[]Account
 }
 
 type makeTenantParams struct {
@@ -76,7 +76,7 @@ func NewTenant(tenantIdentity tenantIdentity, tenantStoreInfo tenantStoreInfo, a
 	params := newTenantParams{
 		tenantIdentity:  tenantIdentity,
 		tenantStoreInfo: tenantStoreInfo,
-		accounts:        accounts,
+		Accounts:        accounts,
 	}
 	if err := validator.Validate.Struct(params); err != nil {
 		return nil, custom_errors.New(
@@ -86,14 +86,14 @@ func NewTenant(tenantIdentity tenantIdentity, tenantStoreInfo tenantStoreInfo, a
 	}
 
 	return &tenantImpl{
-		name:         params.name,
-		address:      params.address,
-		email:        params.email,
-		phone:        params.phone,
-		timezone:     params.timezone,
-		openingHours: params.openingHours,
-		closingHours: params.closingHours,
-		accounts:     params.accounts,
+		name:         params.Name,
+		address:      params.Address,
+		email:        params.Email,
+		phone:        params.Phone,
+		timezone:     params.Timezone,
+		openingHours: params.OpeningHours,
+		closingHours: params.ClosingHours,
+		accounts:     params.Accounts,
 	}, nil
 }
 
@@ -117,17 +117,17 @@ func MakeTenant(metadata metadata,
 
 	return &tenantImpl{
 		entity: entity{
-			id:        params.id,
-			createdAt: params.createdAt,
-			updatedAt: params.updatedAt,
+			id:        params.ID,
+			createdAt: params.CreatedAt,
+			updatedAt: params.UpdatedAt,
 		},
-		name:         params.name,
-		address:      params.address,
-		email:        params.email,
-		phone:        params.phone,
-		timezone:     params.timezone,
-		openingHours: params.openingHours,
-		closingHours: params.closingHours,
+		name:         params.Name,
+		address:      params.Address,
+		email:        params.Email,
+		phone:        params.Phone,
+		timezone:     params.Timezone,
+		openingHours: params.OpeningHours,
+		closingHours: params.ClosingHours,
 		accounts:     params.accounts,
 	}, nil
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDeleteWithTransaction(t *testing.T) {
@@ -11,7 +12,7 @@ func TestDeleteWithTransaction(t *testing.T) {
 
 	err := repo.Where("name LIKE ?", "Item%").Delete(ctx)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	// Verify deletion
 	var count int64

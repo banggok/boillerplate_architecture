@@ -12,13 +12,14 @@ import (
 	"github.com/banggok/boillerplate_architecture/tests/helper/setup"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetOne(t *testing.T) {
-	_, cleanUp, db := setup.TestingEnv(t, false)
-	defer cleanUp(db)
+	_, cleanUp, mysqlCfg := setup.TestingEnv(t, false)
+	defer cleanUp(mysqlCfg)
 
-	ctx := setupTransaction(db.Slave, db.Master)
+	ctx := setupTransaction(mysqlCfg.Slave, mysqlCfg.Master)
 
 	t.Run("account not found", func(t *testing.T) {
 		accountRepo := repository.NewGenericRepository[entity.Account, model.Account](model.NewAccountModel)
@@ -55,10 +56,10 @@ func TestGetOne(t *testing.T) {
 }
 
 func TestGetAllWithPagination(t *testing.T) {
-	_, cleanUp, db := setup.TestingEnv(t, false)
-	defer cleanUp(db)
+	_, cleanUp, mysqlCfg := setup.TestingEnv(t, false)
+	defer cleanUp(mysqlCfg)
 
-	ctx := setupTransaction(db.Slave, db.Master)
+	ctx := setupTransaction(mysqlCfg.Slave, mysqlCfg.Master)
 
 	repo := repository.NewGenericRepository[entity.Tenant, model.Tenant](model.NewTenantModel)
 
@@ -68,58 +69,58 @@ func TestGetAllWithPagination(t *testing.T) {
 		Page: 1,
 		Size: 1,
 	})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	expectedRes := []entity.Tenant{
 		tenant[0],
 	}
 	asserthelper.AssertStruct(t, res, expectedRes)
 	assert.Equal(t, int64(2), count)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func TestGetAll(t *testing.T) {
-	_, cleanUp, db := setup.TestingEnv(t, false)
-	defer cleanUp(db)
-	ctx := setupTransaction(db.Slave, db.Master)
+	_, cleanUp, mysqlCfg := setup.TestingEnv(t, false)
+	defer cleanUp(mysqlCfg)
+	ctx := setupTransaction(mysqlCfg.Slave, mysqlCfg.Master)
 
 	repo := repository.NewGenericRepository[entity.Tenant, model.Tenant](model.NewTenantModel)
 
 	tenant := insertTenant(t, repo, ctx)
 
 	res, err := repo.Where("id = ?", tenant[1].ID()).GetAll(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	asserthelper.AssertStruct(t, res, []entity.Tenant{tenant[1]})
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 }
 
 func insertTenant(t *testing.T, repo repository.GenericRepository[entity.Tenant, model.Tenant],
 	ctx *gin.Context) []entity.Tenant {
 	tenant, err := entity.NewTenant(
-		entity.NewTenantIdentity("tenant 1", "email1@test.com", "081234567891"),
+		entity.NewTenantIdentity("tenant 1", "email1@test.com", "+6281234567891"),
 		entity.NewTenantStoreInfo("address 1", "UTC", "08:00", "21:00"),
 		nil,
 	)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = repo.Persist(ctx, &tenant)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	tenant2, err := entity.NewTenant(
-		entity.NewTenantIdentity("tenant 2", "email2@test.com", "081234567892"),
+		entity.NewTenantIdentity("tenant 2", "email2@test.com", "+6281234567892"),
 		entity.NewTenantStoreInfo("address 2", "UTC", "08:00", "21:00"),
 		nil,
 	)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	err = repo.Persist(ctx, &tenant2)
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	return []entity.Tenant{
 		tenant,
 		tenant2,

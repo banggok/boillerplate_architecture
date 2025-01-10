@@ -1,7 +1,6 @@
 package services
 
 import (
-	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/repository"
@@ -17,7 +16,7 @@ type config interface {
 	Tenant() tenant.Service
 	Email() email.Service
 	AccountVerification() accountverification.Service
-	Account() account.Service
+	// Account() account.Service
 }
 
 type servicesImplt struct {
@@ -28,9 +27,9 @@ type servicesImplt struct {
 }
 
 // Account implements Config.
-func (s *servicesImplt) Account() account.Service {
-	return s.account
-}
+// func (s *servicesImplt) Account() account.Service {
+// 	return s.account
+// }
 
 // AccountVerification implements Config.
 func (s *servicesImplt) AccountVerification() accountverification.Service {
@@ -53,7 +52,7 @@ func Setup() {
 	accountVerificationRepo := repository.NewGenericRepository[entity.AccountVerification, model.AccountVerification](model.NewAccountVerification)
 
 	ServiceConFig = &servicesImplt{
-		email:               email.New(app.AppConfig.SMTP, nil),
+		email:               email.New(nil),
 		tenant:              tenant.New(tenantRepo, accountRepo),
 		accountVerification: accountverification.NewService(accountVerificationRepo),
 		account:             account.New(accountRepo),
