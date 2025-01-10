@@ -6,6 +6,7 @@ import (
 	eventconfig "github.com/banggok/boillerplate_architecture/internal/config/event"
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/request"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/event"
 	accountverification "github.com/banggok/boillerplate_architecture/internal/services/account_verification"
@@ -13,7 +14,7 @@ import (
 )
 
 type usecase interface {
-	execute(ctx *gin.Context, request Request) (entity.Account, error)
+	execute(ctx *gin.Context, request request.IRequest) (entity.Account, error)
 }
 
 type usecaseImpl struct {
@@ -25,7 +26,11 @@ var topicName = map[valueobject.VerificationType]event.EventTopic{
 }
 
 // Execute implements usecase.
-func (u *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Account, error) {
+func (u *usecaseImpl) execute(ctx *gin.Context, iRequest request.IRequest) (entity.Account, error) {
+	request, ok := iRequest.(*Request)
+	if !ok {
+		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "request invalid")
+	}
 	accountVerification, err := u.service.GetByTokenVerification(ctx, request.Token)
 	if err != nil {
 		return nil, custom_errors.New(err, custom_errors.InternalServerError, "token invalid")

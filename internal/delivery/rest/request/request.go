@@ -14,17 +14,13 @@ type IRequest interface {
 	ParseAndValidateRequest(c *gin.Context) error
 }
 
-type RequestParam struct {
-	Context                  *gin.Context
-	Request                  interface{}
+type Base struct {
 	Binding                  binding.Binding
 	FieldMessages            map[string]string
 	FieldKeys                map[string]string
 	BadRequestErrorCode      custom_errors.ErrorCode
 	UnprocessEntityErrorCode custom_errors.ErrorCode
 }
-
-type Base struct{}
 
 // customValidationMessages provides default validation error messages.
 func (b *Base) customValidationMessages(err error, fieldMessages map[string]string, fieldKeys map[string]string) map[string]string {
@@ -44,24 +40,27 @@ func (b *Base) customValidationMessages(err error, fieldMessages map[string]stri
 }
 
 // ParseAndValidateRequest handles parsing and validating a request.
-func (b *Base) ParseAndValidateRequest(param RequestParam) error {
+func (b *Base) ParseAndValidateRequest(ctx *gin.Context, request interface{}) error {
 	// Parse the incoming request
-	if param.Binding != nil {
-		if err := param.Context.ShouldBindWith(param.Request, param.Binding); err != nil {
-			param.Context.Error(custom_errors.New(
+	base := *b
+	if b.Binding != nil {
+		if err := ctx.ShouldBindWith(request, b.Binding); err != nil {
+			ctx.Error(custom_errors.New(
 				err,
-				param.BadRequestErrorCode,
+				b.BadRequestErrorCode,
 				"invalid request"))
 			return err
 		}
 	}
 
+	b = &base
+
 	// Validate the request using the validator
-	if err := validator.Validate.Struct(param.Request); err != nil {
-		validationErrors := b.customValidationMessages(err, param.FieldMessages, param.FieldKeys)
-		param.Context.Error(custom_errors.New(
+	if err := validator.Validate.Struct(request); err != nil {
+		validationErrors := b.customValidationMessages(err, b.FieldMessages, b.FieldKeys)
+		ctx.Error(custom_errors.New(
 			err,
-			param.UnprocessEntityErrorCode,
+			b.UnprocessEntityErrorCode,
 			"failed to validate request",
 			validationErrors))
 		return err

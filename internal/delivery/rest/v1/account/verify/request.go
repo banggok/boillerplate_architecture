@@ -5,8 +5,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var _ request.IRequest = &Request{}
-
 type Request struct {
 	Token string `json:"token" validate:"required"`
 }
@@ -14,4 +12,8 @@ type Request struct {
 func (r *Request) ParseAndValidateRequest(c *gin.Context) error {
 	r.Token = c.Param("token")
 	return nil
+}
+
+func newRequest() request.IRequest {
+	return &Request{}
 }

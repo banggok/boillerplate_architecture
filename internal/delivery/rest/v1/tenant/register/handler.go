@@ -37,7 +37,7 @@ func newHandler(
 // @Failure 422 {object} custom_errors.CustomError "Failed to register tenant"
 // @Router /api/v1/tenants/ [post]
 func (h *handlerImpl) register(c *gin.Context) {
-	request := Request{}
+	request := newRequest()
 
 	// Parse and validate the request payload
 	if err := request.ParseAndValidateRequest(c); err != nil {

@@ -15,7 +15,7 @@ type handlerImpl struct {
 
 // login implements handler.
 func (h *handlerImpl) login(c *gin.Context) {
-	request := Request{}
+	request := newRequest()
 
 	// Parse and validate the request payload
 	if err := request.ParseAndValidateRequest(c); err != nil {

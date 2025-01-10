@@ -6,6 +6,7 @@ import (
 	"github.com/banggok/boillerplate_architecture/internal/config/app"
 	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
+	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/request"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/services/notification/email"
 	"github.com/banggok/boillerplate_architecture/internal/services/tenant"
@@ -15,7 +16,7 @@ import (
 
 // usecase defines the interface for registering a tenant
 type usecase interface {
-	execute(ctx *gin.Context, request Request) (entity.Tenant, error)
+	execute(ctx *gin.Context, request request.IRequest) (entity.Tenant, error)
 }
 
 type usecaseImpl struct {
@@ -24,7 +25,11 @@ type usecaseImpl struct {
 }
 
 // execute implements TenantRegisterUsecase.
-func (t *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Tenant, error) {
+func (t *usecaseImpl) execute(ctx *gin.Context, iRequest request.IRequest) (entity.Tenant, error) {
+	request, ok := iRequest.(*Request)
+	if !ok {
+		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "request invalid")
+	}
 	emailVerification, err := entity.NewAccountVerification(valueobject.EMAIL_VERIFICATION, nil)
 	if err != nil {
 		return nil, custom_errors.New(
@@ -74,6 +79,12 @@ func (t *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Tenant,
 		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "token was empty")
 	}
 
+	t.sendWelcomeEmail(emailVerification, tenant, plainPassword)
+
+	return tenant, nil
+}
+
+func (t *usecaseImpl) sendWelcomeEmail(emailVerification entity.AccountVerification, tenant entity.Tenant, plainPassword *string) {
 	if app.AppConfig.Environment == app.ENV_PROD {
 		url := fmt.Sprintf("%s/verify/%s", app.AppConfig.BaseUrl, *emailVerification.Token())
 		go func() {
@@ -94,8 +105,6 @@ func (t *usecaseImpl) execute(ctx *gin.Context, request Request) (entity.Tenant,
 			}
 		}()
 	}
-
-	return tenant, nil
 }
 
 func newUsecase(createTenantService tenant.Service, email email.Service) usecase {
