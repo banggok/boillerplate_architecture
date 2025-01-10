@@ -6,14 +6,19 @@ import (
 )
 
 type Request struct {
+	request.Base
 	Token string `json:"token" validate:"required"`
 }
 
-func (r *Request) ParseAndValidateRequest(c *gin.Context) error {
-	r.Token = c.Param("token")
+func (r *Request) ParseAndValidateRequest() error {
+	r.Token = r.Base.C.Param("token")
 	return nil
 }
 
-func newRequest() request.IRequest {
-	return &Request{}
+func newRequest(c *gin.Context) request.IRequest {
+	return &Request{
+		Base: request.Base{
+			C: c,
+		},
+	}
 }

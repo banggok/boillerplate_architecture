@@ -16,7 +16,7 @@ type config interface {
 	Tenant() tenant.Service
 	Email() email.Service
 	AccountVerification() accountverification.Service
-	// Account() account.Service
+	Account() account.Service
 }
 
 type servicesImplt struct {
@@ -27,9 +27,9 @@ type servicesImplt struct {
 }
 
 // Account implements Config.
-// func (s *servicesImplt) Account() account.Service {
-// 	return s.account
-// }
+func (s *servicesImplt) Account() account.Service {
+	return s.account
+}
 
 // AccountVerification implements Config.
 func (s *servicesImplt) AccountVerification() accountverification.Service {

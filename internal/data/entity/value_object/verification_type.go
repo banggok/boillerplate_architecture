@@ -4,14 +4,14 @@ type VerificationType string
 
 const (
 	EMAIL_VERIFICATION VerificationType = "email"
-	RESET_PASSWORD     VerificationType = "reset_password"
+	CHANGE_PASSWORD    VerificationType = "change_password"
 )
 
 // AllVerificationTypes returns all valid verification types.
 func AllVerificationTypes() []VerificationType {
 	return []VerificationType{
 		EMAIL_VERIFICATION,
-		RESET_PASSWORD,
+		CHANGE_PASSWORD,
 	}
 }
 

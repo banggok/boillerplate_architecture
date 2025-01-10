@@ -6,7 +6,7 @@ import (
 )
 
 type Tenant interface {
-	Entity
+	iMetadata
 	Name() string
 	Address() string
 	Email() string
@@ -18,7 +18,7 @@ type Tenant interface {
 }
 
 type tenantImpl struct {
-	entity
+	metadataImpl
 	name         string // Tenant's name (required, no strict restrictions)
 	address      string // Optional, with a maximum of 255 characters
 	email        string // Tenant's contact email (required)
@@ -116,7 +116,7 @@ func MakeTenant(metadata metadata,
 	}
 
 	return &tenantImpl{
-		entity: entity{
+		metadataImpl: metadataImpl{
 			id:        params.ID,
 			createdAt: params.CreatedAt,
 			updatedAt: params.UpdatedAt,

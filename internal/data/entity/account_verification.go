@@ -11,7 +11,7 @@ import (
 )
 
 type AccountVerification interface {
-	Entity
+	iMetadata
 	AccountID() uint
 	Account() Account
 	VerificationType() valueobject.VerificationType
@@ -23,16 +23,16 @@ type AccountVerification interface {
 
 var generateToken map[valueobject.VerificationType]bool = map[valueobject.VerificationType]bool{
 	valueobject.EMAIL_VERIFICATION: true,
-	valueobject.RESET_PASSWORD:     false,
+	valueobject.CHANGE_PASSWORD:    false,
 }
 
 var duration map[valueobject.VerificationType]time.Duration = map[valueobject.VerificationType]time.Duration{
 	valueobject.EMAIL_VERIFICATION: app.AppConfig.ExpiredDuration.EmailVerification,
-	valueobject.RESET_PASSWORD:     app.AppConfig.ExpiredDuration.ResetPasswordVerification,
+	valueobject.CHANGE_PASSWORD:    app.AppConfig.ExpiredDuration.ResetPasswordVerification,
 }
 
 type accountVerificationImpl struct {
-	entity
+	metadataImpl
 	accountID        uint
 	account          Account
 	verificationType valueobject.VerificationType
@@ -143,7 +143,7 @@ func MakeAccountVerification(metadata metadata, verificationData accountVerifica
 	}
 
 	res = &accountVerificationImpl{
-		entity: entity{
+		metadataImpl: metadataImpl{
 			id:        param.ID,
 			createdAt: param.CreatedAt,
 			updatedAt: param.UpdatedAt,

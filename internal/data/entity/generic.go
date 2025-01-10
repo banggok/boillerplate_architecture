@@ -2,26 +2,26 @@ package entity
 
 import "time"
 
-type Entity interface {
+type iMetadata interface {
 	ID() uint
 	CreatedAt() time.Time
 	UpdatedAt() time.Time
 }
-type entity struct {
+type metadataImpl struct {
 	id        uint      // id from database
 	createdAt time.Time // timestamp from database
 	updatedAt time.Time // timestamp from database
 }
 
-func (a *entity) ID() uint {
+func (a *metadataImpl) ID() uint {
 	return a.id
 }
 
-func (a *entity) CreatedAt() time.Time {
+func (a *metadataImpl) CreatedAt() time.Time {
 	return a.createdAt
 }
 
-func (a *entity) UpdatedAt() time.Time {
+func (a *metadataImpl) UpdatedAt() time.Time {
 	return a.updatedAt
 }
 

@@ -66,6 +66,7 @@ type ErrorCode int
 // Enum-like constants for error keys
 const (
 	InternalServerError ErrorCode = 10500
+	Unauthorized        ErrorCode = 10401
 
 	TenantUnprocessEntity ErrorCode = 20422
 	TenantBadRequest      ErrorCode = 20400
@@ -90,6 +91,10 @@ var errorDict = map[ErrorCode]CustomError{
 	InternalServerError: {
 		HTTPCode: http.StatusInternalServerError,
 		Message:  "Internal Server Error",
+	},
+	Unauthorized: {
+		HTTPCode: http.StatusUnauthorized,
+		Message:  "Unauthorized",
 	},
 	TenantUnprocessEntity: {
 		HTTPCode: http.StatusUnprocessableEntity,

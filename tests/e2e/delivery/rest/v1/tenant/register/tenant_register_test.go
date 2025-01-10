@@ -117,7 +117,7 @@ func TestTenantRegister(t *testing.T) {
 								UpdatedAt: (*(*tenantDB.Accounts)[0].AccountVerifications)[1].UpdatedAt,
 							},
 							AccountID: (*tenantDB.Accounts)[0].ID,
-							Type:      string(valueobject.RESET_PASSWORD.String()),
+							Type:      string(valueobject.CHANGE_PASSWORD.String()),
 							ExpiresAt: (*(*tenantDB.Accounts)[0].AccountVerifications)[1].ExpiresAt,
 							Verified:  false,
 						},

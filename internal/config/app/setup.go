@@ -20,6 +20,13 @@ const (
 	ENV_TESTING Environment = "testing"
 )
 
+type secretKey struct {
+	Access         string
+	Refresh        string
+	AccessExpired  time.Duration
+	RefreshExpired time.Duration
+}
+
 type appConfig struct {
 	BaseUrl          string
 	Port             string
@@ -29,6 +36,7 @@ type appConfig struct {
 	DBConfig         DBConfig
 	Environment      Environment
 	ExpiredDuration  ExpiredDuration
+	SecretKey        secretKey
 }
 
 type ExpiredDuration struct {
@@ -83,6 +91,12 @@ func init() {
 		ExpiredDuration: ExpiredDuration{
 			EmailVerification:         time.Duration(getConfigValueAsInt("EMAIL_VERIFICATION_EXPIRED", 24)) * time.Hour,
 			ResetPasswordVerification: time.Duration(getConfigValueAsInt("RESET_PASSWORD_EXPIRED", 90)) * 24 * time.Hour,
+		},
+		SecretKey: secretKey{
+			Access:         getConfigValue("ACCESS_SECRET_KEY", ""),
+			Refresh:        getConfigValue("REFRESH_SECRET_KEY", ""),
+			AccessExpired:  time.Duration(getConfigValueAsInt("ACCESS_EXPIRED", 15)) * time.Minute,
+			RefreshExpired: time.Duration(getConfigValueAsInt("REFRESH_EXPIRED", 7)) * 24 * time.Hour,
 		},
 	}
 

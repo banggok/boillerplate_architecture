@@ -11,10 +11,11 @@ import (
 )
 
 type IRequest interface {
-	ParseAndValidateRequest(c *gin.Context) error
+	ParseAndValidateRequest() error
 }
 
 type Base struct {
+	C                        *gin.Context
 	Binding                  binding.Binding
 	FieldMessages            map[string]string
 	FieldKeys                map[string]string
@@ -23,15 +24,15 @@ type Base struct {
 }
 
 // customValidationMessages provides default validation error messages.
-func (b *Base) customValidationMessages(err error, fieldMessages map[string]string, fieldKeys map[string]string) map[string]string {
+func (b *Base) customValidationMessages(err error) map[string]string {
 	validationErrors := err.(govalidator.ValidationErrors)
 	errorMessages := make(map[string]string)
 
 	for _, fieldError := range validationErrors {
 		field := fieldError.StructNamespace()
-		message := b.mapValidationMessage(field, fieldMessages)
+		message := b.mapValidationMessage(field)
 		if message != "" {
-			key := b.formatFieldKey(field, fieldKeys)
+			key := b.formatFieldKey(field)
 			errorMessages[key] = message
 		}
 	}
@@ -40,12 +41,12 @@ func (b *Base) customValidationMessages(err error, fieldMessages map[string]stri
 }
 
 // ParseAndValidateRequest handles parsing and validating a request.
-func (b *Base) ParseAndValidateRequest(ctx *gin.Context, request interface{}) error {
+func (b *Base) ParseAndValidateRequest(request interface{}) error {
 	// Parse the incoming request
 	base := *b
 	if b.Binding != nil {
-		if err := ctx.ShouldBindWith(request, b.Binding); err != nil {
-			ctx.Error(custom_errors.New(
+		if err := b.C.ShouldBindWith(request, b.Binding); err != nil {
+			b.C.Error(custom_errors.New(
 				err,
 				b.BadRequestErrorCode,
 				"invalid request"))
@@ -57,8 +58,8 @@ func (b *Base) ParseAndValidateRequest(ctx *gin.Context, request interface{}) er
 
 	// Validate the request using the validator
 	if err := validator.Validate.Struct(request); err != nil {
-		validationErrors := b.customValidationMessages(err, b.FieldMessages, b.FieldKeys)
-		ctx.Error(custom_errors.New(
+		validationErrors := b.customValidationMessages(err)
+		b.C.Error(custom_errors.New(
 			err,
 			b.UnprocessEntityErrorCode,
 			"failed to validate request",
@@ -70,16 +71,16 @@ func (b *Base) ParseAndValidateRequest(ctx *gin.Context, request interface{}) er
 }
 
 // mapValidationMessage maps field names to error messages.
-func (b *Base) mapValidationMessage(field string, fieldMessages map[string]string) string {
-	if message, exists := fieldMessages[field]; exists {
+func (b *Base) mapValidationMessage(field string) string {
+	if message, exists := b.FieldMessages[field]; exists {
 		return message
 	}
 	return fmt.Sprintf("Invalid value for %s.", field)
 }
 
 // formatFieldKey maps field names to JSON keys.
-func (b *Base) formatFieldKey(field string, fieldKeys map[string]string) string {
-	if key, exists := fieldKeys[field]; exists {
+func (b *Base) formatFieldKey(field string) string {
+	if key, exists := b.FieldKeys[field]; exists {
 		return key
 	}
 	return field

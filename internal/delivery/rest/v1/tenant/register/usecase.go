@@ -38,7 +38,7 @@ func (t *usecaseImpl) execute(ctx *gin.Context, iRequest request.IRequest) (enti
 			"failed to create new account entity")
 	}
 
-	resetPassword, err := entity.NewAccountVerification(valueobject.RESET_PASSWORD, nil)
+	resetPassword, err := entity.NewAccountVerification(valueobject.CHANGE_PASSWORD, nil)
 	if err != nil {
 		return nil, custom_errors.New(
 			err,

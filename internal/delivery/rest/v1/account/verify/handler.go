@@ -27,10 +27,10 @@ type handlerImpl struct {
 // @Failure 422 {object} custom_errors.CustomError "Failed to verify account"
 // @Router /api/v1/accounts/verify/{token} [get]
 func (h *handlerImpl) verify(c *gin.Context) {
-	request := newRequest()
+	request := newRequest(c)
 
 	// Parse and validate the request payload
-	request.ParseAndValidateRequest(c)
+	request.ParseAndValidateRequest()
 
 	// Execute the usecase
 	account, err := h.usecase.execute(c, request)

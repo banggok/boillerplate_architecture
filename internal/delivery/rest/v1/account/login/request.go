@@ -25,11 +25,11 @@ var fieldKeys = map[string]string{
 
 // ParseAndValidateRequest implements request.IRequest.
 // Subtle: this method shadows the method (Base).ParseAndValidateRequest of Request.Base.
-func (r *Request) ParseAndValidateRequest(c *gin.Context) error {
-	return r.Base.ParseAndValidateRequest(c, r)
+func (r *Request) ParseAndValidateRequest() error {
+	return r.Base.ParseAndValidateRequest(r)
 }
 
-func newRequest() request.IRequest {
+func newRequest(c *gin.Context) request.IRequest {
 	return &Request{
 		Base: request.Base{
 			Binding:                  binding.JSON,
@@ -37,6 +37,7 @@ func newRequest() request.IRequest {
 			FieldKeys:                fieldKeys,
 			BadRequestErrorCode:      custom_errors.AccountBadRequest,
 			UnprocessEntityErrorCode: custom_errors.AccountUnprocessEntity,
+			C:                        c,
 		},
 	}
 }

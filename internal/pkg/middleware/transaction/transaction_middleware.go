@@ -1,9 +1,9 @@
 package transaction
 
 import (
-	"fmt"
 	"strings"
 
+	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -91,13 +91,13 @@ func GetTransaction(c *gin.Context, isWrite bool) (*gorm.DB, error) {
 	// Retrieve the value from the context
 	tx, exists := c.Get(txName)
 	if !exists {
-		return nil, fmt.Errorf("failed to get database transaction from context: key not found")
+		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "failed to get database transaction from context: key not found")
 	}
 
 	// Validate the type of the value
 	db, ok := tx.(*gorm.DB)
 	if !ok {
-		return nil, fmt.Errorf("failed to get database transaction from context: invalid type")
+		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "failed to get database transaction from context: invalid type")
 	}
 
 	if !isWrite {

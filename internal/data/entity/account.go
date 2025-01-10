@@ -2,24 +2,42 @@ package entity
 
 import (
 	"github.com/banggok/boillerplate_architecture/internal/config/validator"
+	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 
 	"github.com/banggok/boillerplate_architecture/internal/pkg/custom_errors"
 	"github.com/banggok/boillerplate_architecture/internal/pkg/password"
 )
 
 type Account interface {
-	Entity
+	iMetadata
 	TenantId() uint
 	Name() string
 	Password() string
 	Email() string
 	Phone() string
 	Tenant() Tenant
+	accountAssoc
+	accountAction
+}
+
+type verifiedAction string
+
+const (
+	EMAIL           verifiedAction = "email_verification"
+	CHANGE_PASSWORD verifiedAction = "change_password"
+	VERIFIED        verifiedAction = ""
+)
+
+type accountAction interface {
+	VerificationAction() (*verifiedAction, error)
+}
+
+type accountAssoc interface {
 	AccountVerifications() *[]AccountVerification
 }
 
 type accountImpl struct {
-	entity
+	metadataImpl
 	name                 string
 	email                string
 	phone                string
@@ -27,6 +45,29 @@ type accountImpl struct {
 	tenantId             uint
 	tenant               Tenant
 	accountVerifications *[]AccountVerification
+}
+
+// VerificationAction implements Account.
+func (a *accountImpl) VerificationAction() (*verifiedAction, error) {
+	if a.accountVerifications == nil || len(*a.accountVerifications) == 0 {
+		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "accountVerifications was empty when call VerificationAction")
+	}
+	ret := VERIFIED
+	for _, accountVerification := range *a.accountVerifications {
+		if accountVerification.VerificationType() == valueobject.EMAIL_VERIFICATION &&
+			!accountVerification.Verified() {
+			ret = EMAIL
+			return &ret, nil
+		}
+
+		if accountVerification.VerificationType() == valueobject.CHANGE_PASSWORD &&
+			!accountVerification.Verified() {
+			ret = CHANGE_PASSWORD
+			return &ret, nil
+		}
+	}
+
+	return &ret, nil
 }
 
 // AccountVerifications implements Account.
@@ -97,7 +138,7 @@ func MakeAccount(
 	}
 
 	return &accountImpl{
-		entity: entity{
+		metadataImpl: metadataImpl{
 			id:        params.ID,
 			createdAt: params.CreatedAt,
 			updatedAt: params.UpdatedAt,
