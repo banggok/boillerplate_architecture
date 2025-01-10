@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/banggok/boillerplate_architecture/internal/data/entity"
 	valueobject "github.com/banggok/boillerplate_architecture/internal/data/entity/value_object"
 	"github.com/banggok/boillerplate_architecture/internal/data/model"
 	"github.com/banggok/boillerplate_architecture/internal/delivery/rest/v1/account/login"
@@ -120,30 +119,30 @@ func TestAccountLogin(t *testing.T) {
 	})
 
 	t.Run("success with email unverified", func(t *testing.T) {
-		verifiedAction(t, string(entity.EMAIL))
+		verifiedAction(t, valueobject.EMAIL_ACTION)
 	})
 
 	t.Run("success with change password unverified", func(t *testing.T) {
-		verifiedAction(t, string(entity.CHANGE_PASSWORD))
+		verifiedAction(t, valueobject.CHANGE_PASSWORD_ACTION)
 	})
 
 	t.Run("success verified", func(t *testing.T) {
-		verifiedAction(t, string(entity.VERIFIED))
+		verifiedAction(t, valueobject.VERIFIED)
 	})
 }
 
-func verifiedAction(t *testing.T, action string) {
+func verifiedAction(t *testing.T, action valueobject.VerificationAction) {
 	server, cleanUp, mysqlCfg := setup.TestingEnv(t, true)
 	defer cleanUp(mysqlCfg)
 
 	emailVerificationData := data.AccountVerificationData
-	if action == string(entity.CHANGE_PASSWORD) || action == string(entity.VERIFIED) {
+	if action == valueobject.CHANGE_PASSWORD_ACTION || action == valueobject.VERIFIED {
 		emailVerificationData.Verified = true
 	}
 	changePasswordVerificationData := data.AccountVerificationData
 	changePasswordVerificationData.Type = valueobject.CHANGE_PASSWORD.String()
 	changePasswordVerificationData.Token = nil
-	if action == string(entity.VERIFIED) {
+	if action == valueobject.VERIFIED {
 		changePasswordVerificationData.Verified = true
 	}
 	accountData := data.AccountData
@@ -178,7 +177,7 @@ func verifiedAction(t *testing.T, action string) {
 	assert.Equal(t, "Account logged in successfully", responseBody.Message)
 
 	assert.Equal(t, accountData.ID, responseBody.Data.ID)
-	assert.Equal(t, action, responseBody.Data.Action)
+	assert.Equal(t, action.String(), responseBody.Data.Action)
 
 	accessToken, err := authentication.ValidateToken(responseBody.Data.AccessToken, true)
 	assert.NoError(t, err)

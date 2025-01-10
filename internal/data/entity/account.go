@@ -20,16 +20,8 @@ type Account interface {
 	accountAction
 }
 
-type verifiedAction string
-
-const (
-	EMAIL           verifiedAction = "email_verification"
-	CHANGE_PASSWORD verifiedAction = "change_password"
-	VERIFIED        verifiedAction = ""
-)
-
 type accountAction interface {
-	VerificationAction() (*verifiedAction, error)
+	VerificationAction() (*valueobject.VerificationAction, error)
 }
 
 type accountAssoc interface {
@@ -48,21 +40,21 @@ type accountImpl struct {
 }
 
 // VerificationAction implements Account.
-func (a *accountImpl) VerificationAction() (*verifiedAction, error) {
+func (a *accountImpl) VerificationAction() (*valueobject.VerificationAction, error) {
 	if a.accountVerifications == nil || len(*a.accountVerifications) == 0 {
 		return nil, custom_errors.New(nil, custom_errors.InternalServerError, "accountVerifications was empty when call VerificationAction")
 	}
-	ret := VERIFIED
+	ret := valueobject.VERIFIED
 	for _, accountVerification := range *a.accountVerifications {
 		if accountVerification.VerificationType() == valueobject.EMAIL_VERIFICATION &&
 			!accountVerification.Verified() {
-			ret = EMAIL
+			ret = valueobject.EMAIL_ACTION
 			return &ret, nil
 		}
 
 		if accountVerification.VerificationType() == valueobject.CHANGE_PASSWORD &&
 			!accountVerification.Verified() {
-			ret = CHANGE_PASSWORD
+			ret = valueobject.CHANGE_PASSWORD_ACTION
 			return &ret, nil
 		}
 	}

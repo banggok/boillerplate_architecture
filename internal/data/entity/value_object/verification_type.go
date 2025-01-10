@@ -7,8 +7,8 @@ const (
 	CHANGE_PASSWORD    VerificationType = "change_password"
 )
 
-// AllVerificationTypes returns all valid verification types.
-func AllVerificationTypes() []VerificationType {
+// allVerificationTypes returns all valid verification types.
+func allVerificationTypes() []VerificationType {
 	return []VerificationType{
 		EMAIL_VERIFICATION,
 		CHANGE_PASSWORD,
@@ -17,7 +17,7 @@ func AllVerificationTypes() []VerificationType {
 
 // IsValid checks if a VerificationType is valid.
 func (v VerificationType) IsValid() bool {
-	for _, validType := range AllVerificationTypes() {
+	for _, validType := range allVerificationTypes() {
 		if v == validType {
 			return true
 		}
