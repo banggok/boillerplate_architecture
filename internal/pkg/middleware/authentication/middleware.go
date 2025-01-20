@@ -75,6 +75,15 @@ func GenerateTokens(userID uint) (string, string, error) {
 
 // JWT Authentication Middleware
 func AuthMiddleware() gin.HandlerFunc {
+	return authValidate(true)
+}
+
+// JWT Authentication Middleware
+func RefreshAuthMiddleware() gin.HandlerFunc {
+	return authValidate(false)
+}
+
+func authValidate(isAccessToken bool) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Extract token from the Authorization header
 		tokenString := c.GetHeader("Authorization")
@@ -83,7 +92,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		// Validate the token
-		claims, err := ValidateToken(tokenString, true)
+		claims, err := ValidateToken(tokenString, isAccessToken)
 		if err != nil {
 			c.Error(custom_errors.New(
 				err,

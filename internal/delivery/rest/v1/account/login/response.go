@@ -23,7 +23,7 @@ func transform(account entity.Account, accessToken string, refreshToken string) 
 	}
 	return &Response{
 		ID:           account.ID(),
-		Action:       string(*action),
+		Action:       action.String(),
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		CreatedAt:    account.CreatedAt(),
